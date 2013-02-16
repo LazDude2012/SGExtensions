@@ -11,4 +11,8 @@ public class DiallerBlock extends Block
 		super(i,j, Material.rock);
 		this.setCreativeTab(CreativeTabs.tabMisc);
 	}
+	public String getTextureFile()
+	{
+		  return "sgextensions/blocks.png";
+	}
 }
