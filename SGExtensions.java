@@ -26,7 +26,8 @@ public class SGExtensions
 	public void load(FMLInitializationEvent event)
 	{
 		proxy.registerRenderThings();
-		GameRegistry.registerBlock(diallerBlock, "Dialler");
+		GameRegistry.registerBlock(diallerBlock, "blockDialler");
+		GameRegistry.registerTileEntity(TileDialler.class,"tileDialler");
 		LanguageRegistry.addName(diallerBlock,"Gate Dialing Device");
 	}
 }

@@ -14,7 +14,7 @@ public class ConfigHandler
 
 		Property dialler;
 		dialler = config.getBlock("DialComputerID",3745,"The Block ID for the Dialling Computer.");
-
+		blockDiallerID=dialler.getInt();
 		config.save();
 	}
 }
