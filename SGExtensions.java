@@ -7,7 +7,10 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
+import gcewing.sg.SGCraft;
 import net.minecraft.block.Block;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 
 @Mod(modid="teamautomod_SGExtensions",name="SG Extensions",version = "pre1")
 @NetworkMod(clientSideRequired = true,serverSideRequired = true)
@@ -27,7 +30,8 @@ public class SGExtensions
 	{
 		proxy.registerRenderThings();
 		GameRegistry.registerBlock(diallerBlock, "blockDialler");
-		GameRegistry.registerTileEntity(TileDialler.class,"tileDialler");
-		LanguageRegistry.addName(diallerBlock,"Gate Dialing Device");
+		GameRegistry.registerTileEntity(TileDialler.class, "tileDialler");
+		GameRegistry.addShapedRecipe(new ItemStack(diallerBlock,1),"III","RDR","III",'I', Item.ingotIron,'R',Item.redstone,'D', SGCraft.sgControllerCrystal);
+		LanguageRegistry.addName(diallerBlock,"Dialling Computer");
 	}
 }
