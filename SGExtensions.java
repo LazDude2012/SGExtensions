@@ -19,11 +19,13 @@ public class SGExtensions
 	@SidedProxy(clientSide="sgextensions.ClientProxy",serverSide = "sgextensions.CommonProxy")
 	public static CommonProxy proxy;
 	public static Block diallerBlock;
+	public static Block gatePowererBlock;
 
 	@Mod.PreInit()
 	public void preInit(FMLPreInitializationEvent e){
 		ConfigHandler.loadConfig(e);
 		diallerBlock = new DiallerBlock(ConfigHandler.blockDiallerID,0).setBlockName("diallerblock");
+		gatePowererBlock = new PowererBlock(ConfigHandler.blockPowererID, 0).setBlockName("powererblock");
 	}
 	@Mod.Init
 	public void load(FMLInitializationEvent event)
@@ -33,5 +35,10 @@ public class SGExtensions
 		GameRegistry.registerTileEntity(TileDialler.class, "tileDialler");
 		GameRegistry.addShapedRecipe(new ItemStack(diallerBlock,1),"III","RDR","III",'I', Item.ingotIron,'R',Item.redstone,'D', SGCraft.sgControllerCrystal);
 		LanguageRegistry.addName(diallerBlock,"Dialling Computer");
+
+		GameRegistry.registerBlock(gatePowererBlock, "blockPowerer");
+		GameRegistry.registerTileEntity(TilePowerer.class,"tilePowerer");
+		GameRegistry.addRecipe(new ItemStack(gatePowererBlock, 1),"IRI","GDG","IRI",'I',Item.ingotIron, 'R',Item.redstone, 'G',Item.ingotGold, 'D',Item.diamond);
+		LanguageRegistry.addName(gatePowererBlock, "Gate Power Interface");
 	}
 }
