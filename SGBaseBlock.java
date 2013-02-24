@@ -18,7 +18,7 @@ import net.minecraft.world.World;
 public class SGBaseBlock extends Base4WayBlock<SGBaseTE>
 {
 
-	static boolean debugMerge = false;
+	static boolean debugMerge = true;
 
 	static final int topAndBottomTexture = 0x00;
 	static final int frontTexture = 0x01;
