@@ -1,6 +1,5 @@
 package sgextensions;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
@@ -11,9 +10,10 @@ public class DiallerBlock extends BlockContainer
 {
 	public DiallerBlock(int i, int j)
 	{
-		super(i,j, Material.rock);
+		super(i, j, Material.rock);
 		this.setCreativeTab(CreativeTabs.tabMisc);
 	}
+
 	public String getTextureFile()
 	{
 		return "sgextensions/blocks.png";
@@ -22,7 +22,7 @@ public class DiallerBlock extends BlockContainer
 	@Override
 	public int getBlockTextureFromSide(int i)
 	{
-	    return 0;
+		return 0;
 	}
 
 
