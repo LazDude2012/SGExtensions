@@ -16,6 +16,8 @@ import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.logging.Level;
 
 public class ClientProxy extends CommonProxy
@@ -30,36 +32,30 @@ public class ClientProxy extends CommonProxy
 		MinecraftForgeClient.preloadTexture("/sgextensions/resources/textures.png");
 	}
 
+	@Override
 	public void ProxyInit()
 	{
 		registerSounds();
 		registerRenderers();
 	}
 
-
-	@Override
-	public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z)
-	{
-		switch (id)
-		{
-			case SGExtensions.GUIELEMENT_GATE:
-				return SGBaseScreen.create(player, world, x, y, z);
-			case SGExtensions.GUIELEMENT_DHD:
-				return new SGControllerScreen(player, world, x, y, z);
-			default:
-				return null;
-		}
-	}
-
 	void registerSounds()
 	{
-		FMLLog.log("SGExtensions", Level.INFO, "Loading SGExtensions sounds...");
-		SoundPool pool = ModLoader.getMinecraftInstance().sndManager.soundPoolSounds;
-		pool.addSound("sgextensions/resources/sounds/sg_abort.ogg", new File("sgextensions/resources/sounds/sg_abort.ogg"));
-		pool.addSound("sgextensions/resources/sounds/sg_close.ogg", new File("sgextensions/resources/sounds/sg_close.ogg"));
-		pool.addSound("sgextensions/resources/sounds/sg_dial.ogg", new File("sgextensions/resources/sounds/sg_dial.ogg"));
-		pool.addSound("sgextensions/resources/sounds/sg_open.ogg", new File("sgextensions/resources/sounds/sg_open.ogg"));
-		FMLLog.log("SGExtensions", Level.INFO, "... complete!");
+		try
+		{
+			FMLLog.log("SGExtensions", Level.INFO, "Loading SGExtensions sounds...");
+			SoundPool pool = ModLoader.getMinecraftInstance().sndManager.soundPoolSounds;
+			URL resourceURL = getClass().getClassLoader().getResource("sgextensions/resources/");
+			pool.addSound("sgextensions/sg_abort.ogg", new URL(resourceURL, "sounds/sg_abort.ogg"));
+			pool.addSound("sgextensions/sg_close.ogg", new URL(resourceURL, "sounds/sg_close.ogg"));
+			pool.addSound("sgextensions/sg_dial.ogg", new URL(resourceURL, "sounds/sg_dial.ogg"));
+			pool.addSound("sgextensions/sg_open.ogg", new URL(resourceURL, "sounds/sg_open.ogg"));
+			FMLLog.log("SGExtensions", Level.INFO, "... complete!");
+		}
+		catch (MalformedURLException e)
+		{
+			throw new RuntimeException("The hell?",e);
+		}
 	}
 
 	void registerRenderers()

@@ -106,9 +106,9 @@ public class SGBaseBlock extends Base4WayBlock<SGBaseTE>
 			return sideTexture;
 	}
 
-//	int getRotation(World world, int x, int y, int z) {
-//		return world.getBlockMetadata(x, y, z) & rotationMask;
-//	}
+    //int getRotation(World world, int x, int y, int z) {
+	//    return world.getBlockMetadata(x, y, z) & rotationMask;
+    //}
 
 	void checkForMerge(World world, int x, int y, int z)
 	{

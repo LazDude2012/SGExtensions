@@ -1,10 +1,12 @@
 package sgextensions;
 
+import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
+import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.LanguageRegistry;
 import cpw.mods.fml.common.registry.VillagerRegistry;
@@ -14,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.WeightedRandomChestContent;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ChestGenHooks;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.world.ChunkDataEvent;
 
@@ -25,6 +28,7 @@ public class SGExtensions
 	public static CommonProxy proxy;
     @Mod.Instance
     public static SGExtensions instance = new SGExtensions();
+	public static GuiHandler guiHandler = new GuiHandler();
 
 	public static SGChannel channel;
 	public static BaseTEChunkManager chunkManager;
@@ -54,6 +58,7 @@ public class SGExtensions
 	@Mod.Init
 	public void load(FMLInitializationEvent event)
 	{
+		MinecraftForge.EVENT_BUS.register(this);
 		proxy.registerRenderThings();
 		channel = new SGChannel(Info.modID);
 		chunkManager = new BaseTEChunkManager(this);
@@ -63,6 +68,8 @@ public class SGExtensions
         registerRandomItems();
         registerTradeHandlers();
         registerWorldGenerators();
+		proxy.ProxyInit();
+		NetworkRegistry.instance().registerGuiHandler(SGExtensions.instance,guiHandler);
 	}
 	void registerBlocks()
 	{

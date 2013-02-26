@@ -91,7 +91,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	@Override
 	void onAddedToWorld()
 	{
-		System.out.printf("SGBaseTE.onAddedToWorld\n");
+		//System.out.printf("SGBaseTE.onAddedToWorld\n");
 		setForcedChunkRange(0, 0, 0, 0);
 	}
 
@@ -248,8 +248,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 	void enterState(SGState newState, int newTimeout)
 	{
-		System.out.printf("SGBaseTE: %s entering state %s with timeout %s\n",
-				side(), newState, newTimeout);
+		//System.out.printf("SGBaseTE: %s entering state %s with timeout %s\n",
+				//side(), newState, newTimeout);
 		state = newState;
 		timeout = newTimeout;
 		onInventoryChanged();
@@ -315,8 +315,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 	public void clearLinkToController()
 	{
-		System.out.printf("SGBaseTE: Unlinking stargate at (%d, %d, %d) from controller\n",
-				xCoord, yCoord, zCoord);
+		//System.out.printf("SGBaseTE: Unlinking stargate at (%d, %d, %d) from controller\n",
+				//xCoord, yCoord, zCoord);
 		isLinkedToController = false;
 		//markBlockForUpdate();
 		onInventoryChanged();
@@ -326,8 +326,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 	public void connectOrDisconnect(String address, EntityPlayer player)
 	{
-		System.out.printf("SGBaseTE: %s: connectOrDisconnect('%s') in state %s by %s\n",
-				side(), address, state, player);
+		//System.out.printf("SGBaseTE: %s: connectOrDisconnect('%s') in state %s by %s\n",
+				//side(), address, state, player);
 		if (state == SGState.Idle)
 		{
 			if (address.length() == SGAddressing.addressLength)
@@ -343,7 +343,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 				if (state != SGState.Disconnecting)
 					disconnect();
 			} else if (!canDisconnect)
-				System.out.printf("SGBaseTE.connectOrDisconnect: Not initiator\n");
+				;;
+				//System.out.printf("SGBaseTE.connectOrDisconnect: Not initiator\n");
 		}
 	}
 
@@ -351,13 +352,13 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	{
 		String homeAddress = findHomeAddress();
 		SGBaseTE dte = SGAddressing.findAddressedStargate(address);
-		System.out.printf("SGBaseTE.connect: addressed TE = %s\n", dte);
+		//System.out.printf("SGBaseTE.connect: addressed TE = %s\n", dte);
 		if (dte == null)
 		{
 			diallingFailure(player, "No stargate at address " + address);
 			return;
 		}
-		System.out.printf("SGBaseTE.connect: addressed TE state = %s\n", dte.state);
+		//System.out.printf("SGBaseTE.connect: addressed TE state = %s\n", dte.state);
 		if (dte.state != SGState.Idle)
 		{
 			diallingFailure(player, "Stargate at address " + address + " is busy");
@@ -375,7 +376,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	void diallingFailure(EntityPlayer player, String mess)
 	{
 		player.addChatMessage(mess);
-		playSoundEffect("gcewing.sg.sg_abort", 1.0F, 1.0F);
+		playSoundEffect("sgextensions.sg_abort", 1.0F, 1.0F);
 	}
 
 	String findHomeAddress()
@@ -387,14 +388,14 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		}
 		catch (SGAddressing.AddressingError e)
 		{
-			System.out.printf("SGBaseTE.findHomeAddress: %s\n", e);
+			//System.out.printf("SGBaseTE.findHomeAddress: %s\n", e);
 			return "";
 		}
 	}
 
 	public void disconnect()
 	{
-		System.out.printf("SGBaseTE: %s: disconnect()\n", side());
+		//System.out.printf("SGBaseTE: %s: disconnect()\n", side());
 		SGBaseTE dte = SGBaseTE.at(connectedLocation);
 		if (dte != null)
 			dte.clearConnection();
@@ -405,7 +406,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	{
 		if (state != SGState.Idle || connectedLocation != null)
 		{
-			System.out.printf("SGBaseTE.clearConnection: Resetting state\n");
+			//System.out.printf("SGBaseTE.clearConnection: Resetting state\n");
 			dialledAddress = "";
 			connectedLocation = null;
 			isInitiator = false;
@@ -416,11 +417,11 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			{
 				enterState(SGState.Disconnecting, disconnectTime);
 				//sendClientEvent(SGEvent.StartDisconnecting, 0);
-				playSoundEffect("gcewing.sg.sg_close", 1.0F, 1.0F);
+				playSoundEffect("sgextensions.sg_close", 1.0F, 1.0F);
 			} else
 			{
 				if (state != SGState.Idle && state != SGState.Disconnecting)
-					playSoundEffect("gcewing.sg.sg_abort", 1.0F, 1.0F);
+					playSoundEffect("sgextensions.sg_abort", 1.0F, 1.0F);
 				enterState(SGState.Idle, 0);
 				//sendClientEvent(SGEvent.FinishDisconnecting, 0);
 			}
@@ -429,8 +430,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 	void startDiallingStargate(String address, SGBaseTE dte, boolean initiator)
 	{
-		System.out.printf("SGBaseTE.startDiallingStargate %s, initiator = %s\n",
-				dte, initiator);
+		//System.out.printf("SGBaseTE.startDiallingStargate %s, initiator = %s\n",
+				//dte, initiator);
 		dialledAddress = address;
 		connectedLocation = new SGLocation(dte);
 		isInitiator = initiator;
@@ -554,12 +555,12 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			Vector3 ep = new Vector3(ent.posX, ent.posY, ent.posZ);
 			Vector3 gp = t.p(0, 2, 0.5);
 			double dist = ep.distance(gp);
-			System.out.printf("SGBaseTE.performTransientDamage: found %s\n", ent);
+			//System.out.printf("SGBaseTE.performTransientDamage: found %s\n", ent);
 			if (dist > 1.0)
 				dist = 1.0;
 			int damage = (int) Math.ceil(dist * transientDamageRate);
-			System.out.printf("SGBaseTE.performTransientDamage: distance = %s, damage = %s\n",
-					dist, damage);
+			//System.out.printf("SGBaseTE.performTransientDamage: distance = %s, damage = %s\n",
+					//dist, damage);
 			ent.attackEntityFrom(transientDamage, damage);
 		}
 	}
@@ -587,7 +588,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		if (i >= 0 && i < numRingSymbols)
 		{
 			startDiallingToAngle(i * ringSymbolAngle - 45 * numEngagedChevrons);
-			playSoundEffect("gcewing.sg.sg_dial", 1.0F, 1.0F);
+			playSoundEffect("sgextensions.sg_dial", 1.0F, 1.0F);
 		}
 	}
 
@@ -613,12 +614,12 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 	void finishDiallingAddress()
 	{
-		System.out.printf("SGBaseTE: Connecting to '%s'\n", dialledAddress);
+		//System.out.printf("SGBaseTE: Connecting to '%s'\n", dialledAddress);
 		if (!isInitiator || useFuel(fuelToOpen))
 		{
 			//sendClientEvent(SGEvent.Connect, 0);
 			enterState(SGState.Transient, transientDuration);
-			playSoundEffect("gcewing.sg.sg_open", 1.0F, 1.0F);
+			playSoundEffect("sgextensions.sg_open", 1.0F, 1.0F);
 		} else
 		{
 			//enterState(SGState.Idle, 0);
@@ -648,8 +649,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			//System.out.printf("SGBaseTE.entityInPortal: z0 = %.3f z1 = %.3f\n", p0.z, p1.z);
 			if (p0.z >= 0.0 && p1.z < 0.0)
 			{
-				System.out.printf("SGBaseTE.entityInPortal: Passed through event horizon of stargate at (%d,%d,%d) in %s\n",
-						xCoord, yCoord, zCoord, worldObj);
+				//System.out.printf("SGBaseTE.entityInPortal: Passed through event horizon of stargate at (%d,%d,%d) in %s\n",
+						//xCoord, yCoord, zCoord, worldObj);
 				SGBaseTE dte = getConnectedStargateTE();
 				if (dte != null)
 				{
@@ -750,7 +751,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		WorldServer newWorld = server.worldServerForDimension(dimension);
 		oldEntity.setDead();
 		Entity newEntity = EntityList.createEntityByName(EntityList.getEntityString(oldEntity), newWorld);
-		System.out.printf("SGBaseTE.teleportEntityToDimension: newEntity = %s\n", newEntity);
+		//System.out.printf("SGBaseTE.teleportEntityToDimension: newEntity = %s\n", newEntity);
 		if (newEntity != null)
 		{
 			newEntity.copyDataFrom(oldEntity, true);
@@ -776,7 +777,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		int cy = MathHelper.floor_double(entity.posZ / 16.0D);
 		Chunk chunk = world.getChunkFromChunkCoords(cx, cy);
 		//SGCraft.forceChunk(chunk);
-		System.out.printf("SGBaseTE.checkChunk: (%d, %d) chunk = %s\n", cx, cy, chunk);
+		//System.out.printf("SGBaseTE.checkChunk: (%d, %d) chunk = %s\n", cx, cy, chunk);
 	}
 
 	Vector3 yawVector(Entity entity)
@@ -985,7 +986,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 	void dumpGrid(String label, double g[][])
 	{
-		System.out.printf("SGBaseTE: %s:\n", label);
+		//System.out.printf("SGBaseTE: %s:\n", label);
 		int m = SGBaseTERenderer.ehGridRadialSize;
 		int n = SGBaseTERenderer.ehGridPolarSize;
 		for (int j = 0; j <= n + 1; j++)

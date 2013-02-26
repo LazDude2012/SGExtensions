@@ -79,6 +79,7 @@ public class SGRingBlock extends BaseBlock<SGRingTE>
 		return false;
 	}
 
+	@Override
 	public int getBlockTextureFromSideAndMetadata(int side, int data)
 	{
 		if (side <= 1)
