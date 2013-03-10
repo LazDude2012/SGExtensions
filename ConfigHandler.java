@@ -9,6 +9,7 @@ public class ConfigHandler
 	public static int blockDiallerID;
 	public static int blockPowererID;
 	public static boolean regenOres;
+	public static boolean addOres;
 	public static int blockSGRingID;
 	public static int blockSGBaseID;
 	public static int blockSGPortalID;
@@ -33,7 +34,10 @@ public class ConfigHandler
 
 		Property oreRegen = config.get("WorldGen","OreRegen",false);
 		regenOres = oreRegen.getBoolean(false);
-
+		
+		Property addOresToWorld = config.get("WorldGen","AddOres",true);
+		addOres = addOresToWorld.getBoolean(true);
+		
 		Property ring= config.getBlock("SGRingID",3747,"The BlockID for the SG Ring and Chevron Blocks.");
 		blockSGRingID = ring.getInt();
 
@@ -63,6 +67,8 @@ public class ConfigHandler
 
 		Property crystalControl = config.getItem("SGCrystalControlID",5504,"The ItemID for the Stargate Controller Crystal.");
 		itemCrystalControlID = crystalControl.getInt();
+		
+		
 
 		config.save();
 	}
