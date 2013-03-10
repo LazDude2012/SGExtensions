@@ -20,7 +20,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.world.ChunkDataEvent;
 
-@Mod(modid = "SGExtensions", name = "SG Extensions", version = "pre1")
+@Mod(modid = "SGExtensions", name = "SG Darkcraft Edition", version = "pre1")
 @NetworkMod(clientSideRequired = true, serverSideRequired = true)
 public class SGExtensions
 {
@@ -42,6 +42,7 @@ public class SGExtensions
 	public static Item naquadah, naquadahIngot, sgCoreCrystal, sgControllerCrystal;
 
 	public static boolean addOresToExistingWorlds;
+	public static boolean addOres;
 
 	public static NaquadahOreWorldGen naquadahOreGenerator;
 	public static Block diallerBlock;
@@ -63,13 +64,14 @@ public class SGExtensions
 		channel = new SGChannel(Info.modID);
 		chunkManager = new BaseTEChunkManager(this);
 		addOresToExistingWorlds = ConfigHandler.regenOres;
+		addOres = ConfigHandler.addOres;
 		registerItems();
         registerBlocks();
         registerRandomItems();
         registerTradeHandlers();
         registerWorldGenerators();
 		proxy.ProxyInit();
-		NetworkRegistry.instance().registerGuiHandler(SGExtensions.instance,guiHandler);
+		NetworkRegistry.instance().registerGuiHandler(this,new GuiHandler());
 	}
 	void registerBlocks()
 	{

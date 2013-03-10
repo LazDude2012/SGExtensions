@@ -21,6 +21,14 @@ public class SGBaseContainer extends BaseContainer
 	static final int playerSlotsY = 124;
 
 	SGBaseTE te;
+	
+	public SGBaseContainer(EntityPlayer player, SGBaseTE te)
+	{
+		this.te = te;
+		addFuelSlots();
+		addPlayerSlots(player, playerSlotsX, playerSlotsY);
+	}
+
 
 	public static SGBaseContainer create(EntityPlayer player, World world, int x, int y, int z)
 	{
@@ -30,14 +38,7 @@ public class SGBaseContainer extends BaseContainer
 		else
 			return null;
 	}
-
-	public SGBaseContainer(EntityPlayer player, SGBaseTE te)
-	{
-		this.te = te;
-		addFuelSlots();
-		addPlayerSlots(player, playerSlotsX, playerSlotsY);
-	}
-
+	
 	void addFuelSlots()
 	{
 		int n = te.getSizeInventory();
