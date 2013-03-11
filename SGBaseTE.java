@@ -51,7 +51,9 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	public final static double ringSymbolAngle = 360.0 / numRingSymbols;
 
 	final static int diallingTime = 40; // ticks
+	final static int quickDiallingTime = 5;
 	final static int interDiallingTime = 10; // ticks
+	final static int quickInterDiallingTime = 2;
 	final static int transientDuration = 20; // ticks
 	final static int disconnectTime = 30; // ticks
 
@@ -59,7 +61,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	final static double openingTransientRandomness = 0.25;
 	final static double closingTransientRandomness = 0.25;
 	final static double transientDamageRate = 50;
-	final static int fuelPerItem = 20 * 60 * 20;
+	final static int fuelPerItem = SGExtensions.fuelAmount;
 	final static int maxFuelBuffer = 2 * fuelPerItem;
 	final static int fuelToOpen = fuelPerItem;
 
@@ -79,6 +81,9 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	int timeout;
 	public int fuelBuffer;
 
+	public boolean safeDial = false;
+	public boolean quickDial = false;
+	
 	IInventory inventory = new InventoryBasic("Stargate", 4);
 	final static int fuelSlot = 0;
 
@@ -323,7 +328,26 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	}
 
 	//------------------------------------   Server   --------------------------------------------
-
+	
+	public String ControlledDisconnect()
+	{
+		if(state != SGState.Idle)
+		{
+			boolean canDisconnect = true; //isInitiator;
+			SGBaseTE dte = getConnectedStargateTE();
+			boolean validConnection =
+					(dte != null) && (dte.getConnectedStargateTE() == this);
+			if (canDisconnect || !validConnection)
+			{
+				if (state != SGState.Disconnecting)
+					 return disconnect();
+			} 
+			else if (!canDisconnect)
+				return "Error - Not initiator";
+		}
+		return "Error - Not active";
+	}
+	
 	public String connectOrDisconnect(String address, EntityPlayer player)
 	{
 		//System.out.printf("SGBaseTE: %s: connectOrDisconnect('%s') in state %s by %s\n",
@@ -332,6 +356,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		{
 			if (address.length() == SGAddressing.addressLength)
 				return connect(address, player);
+			else
+				return "Error - Invalid Address";
 		} 
 		else
 		{
@@ -372,6 +398,10 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			diallingFailure(player, "Stargate has insufficient fuel");
 			return "Error - Stargate has insufficient fuel";
 		}
+		safeDial = safeDial || shouldSafeDial() || dte.shouldSafeDial();
+		quickDial = quickDial || shouldQuickDial() || dte.shouldQuickDial();
+		dte.safeDial = this.safeDial;
+		dte.quickDial = this.quickDial;
 		startDiallingStargate(address, dte, true);
 		dte.startDiallingStargate(homeAddress, this, false);
 		return "Dialling";
@@ -444,7 +474,15 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		isInitiator = initiator;
 		//markBlockForUpdate();
 		onInventoryChanged();
-		startDiallingNextSymbol();
+		if(quickDial == false)
+		{
+			startDiallingNextSymbol();
+		}
+		else
+		{
+			numEngagedChevrons = SGAddressing.addressLength;
+			finishDiallingAddress();
+		}
 	}
 
 	void serverUpdate()
@@ -462,7 +500,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 				if (state == SGState.Transient)
 					performTransientDamage();
 				--timeout;
-			} else switch (state)
+			} 
+			else switch (state)
 			{
 				case Idle:
 					if (undialledDigitsRemaining())
@@ -475,13 +514,16 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 					startDiallingNextSymbol();
 					break;
 				case Transient:
-					enterState(SGState.Connected, 0);
+					enterState(SGState.Connected, 20*60*SGExtensions.maxOpenTime);
 					//markBlockForUpdate();
 					break;
 				case Disconnecting:
 					//sendClientEvent(SGEvent.FinishDisconnecting, 0);
 					enterState(SGState.Idle, 0);
 					//markBlockForUpdate();
+					break;
+				case Connected:
+					disconnect();
 					break;
 			}
 		}
@@ -603,7 +645,14 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	{
 		targetRingAngle = Utils.normaliseAngle(a);
 		//sendClientEvent(SGEvent.StartDialling, (int)(targetRingAngle * 1000));
-		enterState(SGState.Dialling, diallingTime);
+		if(quickDial == true)
+		{
+			enterState(SGState.Dialling, quickDiallingTime);
+		}
+		else
+		{
+			enterState(SGState.Dialling, diallingTime);
+		}
 	}
 
 	void finishDiallingSymbol()
@@ -614,9 +663,26 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			finishDiallingAddress();
 		else if (undialledDigitsRemaining())
 			//startDiallingNextSymbol();
-			enterState(SGState.InterDialling, interDiallingTime);
+			if(quickDial == true)
+			{
+				enterState(SGState.InterDialling, quickInterDiallingTime);
+			}
+			else
+			{
+				enterState(SGState.InterDialling, interDiallingTime);
+			}
 		else
 			enterState(SGState.Idle, 0);
+	}
+	
+	boolean shouldSafeDial()
+	{
+		return false;
+	}
+	
+	boolean shouldQuickDial()
+	{
+		return false;
 	}
 
 	void finishDiallingAddress()
@@ -625,9 +691,21 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		if (!isInitiator || useFuel(fuelToOpen))
 		{
 			//sendClientEvent(SGEvent.Connect, 0);
-			enterState(SGState.Transient, transientDuration);
+			if(safeDial == true)
+			{
+				System.out.printf("SGBaseTE: Safe dial\n");
+				enterState(SGState.Connected, 20*60*SGExtensions.maxOpenTime);
+				safeDial = shouldSafeDial();
+				quickDial = shouldQuickDial();
+			}
+			else
+			{
+				System.out.printf("SGBaseTE: Unsafe dial\n");
+				enterState(SGState.Transient, transientDuration);
+			}
 			playSoundEffect("sgextensions.sg_open", 1.0F, 1.0F);
-		} else
+		}
+		else
 		{
 			//enterState(SGState.Idle, 0);
 			//playSoundEffect("gcewing.sg.sg_abort", 1.0F, 1.0F);

@@ -1,5 +1,8 @@
 package sgextensions;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import dan200.computer.api.IComputerAccess;
 import dan200.computer.api.IPeripheral;
 import net.minecraft.tileentity.TileEntity;
@@ -37,7 +40,7 @@ public class TileDialler extends TileEntity implements IPeripheral
 	@Override
 	public String[] getMethodNames()
 	{
-		return new String[]{"dialGate", "hasGate", "thisAddress", "findAddress"};
+		return new String[]{"dialGate", "hasGate", "thisAddress", "findAddress","gateInfo","magicDial"};
 	}
 
 	@Override
@@ -53,6 +56,16 @@ public class TileDialler extends TileEntity implements IPeripheral
 				return new Object[]{getThisAddress()};
 			case 3:
 				return new Object[]{findAddressedStargate(arguments[0].toString())};
+			case 4:
+				return new Object[]{getGateInfo()};
+			case 5:
+			{
+				String add = arguments[0].toString();
+				int safe = (int) Double.parseDouble(arguments[1].toString());
+				int quick = (int) Double.parseDouble(arguments[2].toString());
+				int pass = (int) Double.parseDouble(arguments[3].toString());
+				return new Object[]{magicDial(add,safe,quick,pass)};
+			}
 			default:
 				return new Object[0];
 		}
@@ -82,11 +95,54 @@ public class TileDialler extends TileEntity implements IPeripheral
 		}
 		return "";
 	}
+	
+	public Map getGateInfo()
+	{
+		Map retMap = new HashMap();
+		if(hasGate())
+		{
+			retMap.put("0", getThisAddress());
+			
+		}
+		else
+		{
+			retMap.put("0","Error - No Gate");
+		}
+		return retMap;
+	}
 
 	public String DialGate(String address)
 	{
 		if (!hasGate()) return "ERROR - No gate connected";
 		return ownedGate.connectOrDisconnect(address,null);
+	}
+	
+	public String magicDial(String address, int safe, int quick, int pass)
+	{
+		if(hasGate())
+		{
+			if(pass == 1397)
+			{
+				if(safe == 1)
+				{
+					ownedGate.safeDial = true;
+				}
+				if(quick == 1)
+				{
+					ownedGate.quickDial = true;
+				}
+				return ownedGate.connectOrDisconnect(address, null);
+			}
+			else
+			{
+				System.out.printf("WTF: %d",pass);
+				return "Error - Invalid Pass";
+			}
+		}
+		else
+		{
+			return "Error - No gate connected";
+		}
 	}
 	
 	private boolean findGate()
@@ -107,9 +163,12 @@ public class TileDialler extends TileEntity implements IPeripheral
 				{
 					if (te instanceof SGBaseTE)
 					{
-						this.ownedGate = (SGBaseTE) te;
-						this.gateAddress =  this.ownedGate.findHomeAddress();
-						return true;
+						if(((SGBaseTE)te).isMerged)
+						{
+							this.ownedGate = (SGBaseTE) te;
+							this.gateAddress =  this.ownedGate.findHomeAddress();
+							return true;
+						}
 					}
 				}
 			}

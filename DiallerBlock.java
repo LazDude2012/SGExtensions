@@ -16,7 +16,7 @@ public class DiallerBlock extends BlockContainer
 
 	public String getTextureFile()
 	{
-		return "sgextensions/blocks.png";
+		return "/sgextensions/resources/blocks.png";
 	}
 
 	@Override

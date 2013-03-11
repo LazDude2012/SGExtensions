@@ -43,6 +43,10 @@ public class SGExtensions
 
 	public static boolean addOresToExistingWorlds;
 	public static boolean addOres;
+	
+	public static int bcPowerPerFuel;
+	public static int fuelAmount;
+	public static int maxOpenTime;
 
 	public static NaquadahOreWorldGen naquadahOreGenerator;
 	public static Block diallerBlock;
@@ -65,6 +69,10 @@ public class SGExtensions
 		chunkManager = new BaseTEChunkManager(this);
 		addOresToExistingWorlds = ConfigHandler.regenOres;
 		addOres = ConfigHandler.addOres;
+		bcPowerPerFuel = ConfigHandler.bcPower;
+		fuelAmount = ConfigHandler.fuelAm;
+		maxOpenTime = ConfigHandler.maxOpen;
+		
 		registerItems();
         registerBlocks();
         registerRandomItems();

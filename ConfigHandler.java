@@ -10,6 +10,9 @@ public class ConfigHandler
 	public static int blockPowererID;
 	public static boolean regenOres;
 	public static boolean addOres;
+	public static int bcPower;
+	public static int fuelAm;
+	public static int maxOpen;
 	public static int blockSGRingID;
 	public static int blockSGBaseID;
 	public static int blockSGPortalID;
@@ -37,6 +40,15 @@ public class ConfigHandler
 		
 		Property addOresToWorld = config.get("WorldGen","AddOres",true);
 		addOres = addOresToWorld.getBoolean(true);
+		
+		Property bcPowerFuel = config.get("Power Configuration","BC Power per Fuel Value",120);
+		bcPower = bcPowerFuel.getInt();
+		
+		Property fuelAmount = config.get("Power Configuration","Fuel Values per Naquadah",20*60*20);
+		fuelAm = fuelAmount.getInt();
+		
+		Property maxOpenT = config.get("Gate Configuration","Maximum open time (Minutes)",38);
+		maxOpen = maxOpenT.getInt();
 		
 		Property ring= config.getBlock("SGRingID",3747,"The BlockID for the SG Ring and Chevron Blocks.");
 		blockSGRingID = ring.getInt();
