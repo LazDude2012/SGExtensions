@@ -324,15 +324,16 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 	//------------------------------------   Server   --------------------------------------------
 
-	public void connectOrDisconnect(String address, EntityPlayer player)
+	public String connectOrDisconnect(String address, EntityPlayer player)
 	{
 		//System.out.printf("SGBaseTE: %s: connectOrDisconnect('%s') in state %s by %s\n",
 				//side(), address, state, player);
 		if (state == SGState.Idle)
 		{
 			if (address.length() == SGAddressing.addressLength)
-				connect(address, player);
-		} else
+				return connect(address, player);
+		} 
+		else
 		{
 			boolean canDisconnect = true; //isInitiator;
 			SGBaseTE dte = getConnectedStargateTE();
@@ -341,14 +342,16 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			if (canDisconnect || !validConnection)
 			{
 				if (state != SGState.Disconnecting)
-					disconnect();
-			} else if (!canDisconnect)
-				;;
+					 return disconnect();
+			} 
+			else if (!canDisconnect)
+				return "Error - Not initiator";
 				//System.out.printf("SGBaseTE.connectOrDisconnect: Not initiator\n");
 		}
+		return "Error - Unknown #001";
 	}
 
-	void connect(String address, EntityPlayer player)
+	String connect(String address, EntityPlayer player)
 	{
 		String homeAddress = findHomeAddress();
 		SGBaseTE dte = SGAddressing.findAddressedStargate(address);
@@ -356,26 +359,28 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		if (dte == null)
 		{
 			diallingFailure(player, "No stargate at address " + address);
-			return;
+			return "Error - No stargate at address " + address;
 		}
 		//System.out.printf("SGBaseTE.connect: addressed TE state = %s\n", dte.state);
 		if (dte.state != SGState.Idle)
 		{
 			diallingFailure(player, "Stargate at address " + address + " is busy");
-			return;
+			return "Error - Stargate at address " + address + " is busy";
 		}
 		if (!reloadFuel(fuelToOpen))
 		{
 			diallingFailure(player, "Stargate has insufficient fuel");
-			return;
+			return "Error - Stargate has insufficient fuel";
 		}
 		startDiallingStargate(address, dte, true);
 		dte.startDiallingStargate(homeAddress, this, false);
+		return "Dialling";
 	}
 
 	void diallingFailure(EntityPlayer player, String mess)
 	{
-		player.addChatMessage(mess);
+		if(player != null)
+			player.addChatMessage(mess);
 		playSoundEffect("sgextensions.sg_abort", 1.0F, 1.0F);
 	}
 
@@ -393,13 +398,14 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		}
 	}
 
-	public void disconnect()
+	public String disconnect()
 	{
 		//System.out.printf("SGBaseTE: %s: disconnect()\n", side());
 		SGBaseTE dte = SGBaseTE.at(connectedLocation);
 		if (dte != null)
 			dte.clearConnection();
 		clearConnection();
+		return "Disconncted";
 	}
 
 	public void clearConnection()
@@ -418,7 +424,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 				enterState(SGState.Disconnecting, disconnectTime);
 				//sendClientEvent(SGEvent.StartDisconnecting, 0);
 				playSoundEffect("sgextensions.sg_close", 1.0F, 1.0F);
-			} else
+			} 
+			else
 			{
 				if (state != SGState.Idle && state != SGState.Disconnecting)
 					playSoundEffect("sgextensions.sg_abort", 1.0F, 1.0F);
