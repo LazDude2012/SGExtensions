@@ -11,6 +11,7 @@ public class TileDialler extends TileEntity implements IPeripheral
 {
 	public int x, y, z;
 	public SGBaseTE ownedGate = null;
+	public String gateAddress;
 
 
 	public final String symbolChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -36,7 +37,7 @@ public class TileDialler extends TileEntity implements IPeripheral
 	@Override
 	public String[] getMethodNames()
 	{
-		return new String[]{"dialGate", "hasGate", "findAddress"};
+		return new String[]{"dialGate", "hasGate", "thisAddress", "findAddress"};
 	}
 
 	@Override
@@ -49,6 +50,8 @@ public class TileDialler extends TileEntity implements IPeripheral
 			case 1:
 				return new Object[]{hasGate()};
 			case 2:
+				return new Object[]{getThisAddress()};
+			case 3:
 				return new Object[]{findAddressedStargate(arguments[0].toString())};
 			default:
 				return new Object[0];
@@ -70,32 +73,61 @@ public class TileDialler extends TileEntity implements IPeripheral
 	public void detach(IComputerAccess computer)
 	{
 	}
-
-	public boolean DialGate(String address)
+	
+	public String getThisAddress()
 	{
-		if (!hasGate()) return false;
-		ownedGate.connectOrDisconnect(address, worldObj.getClosestPlayer(x, y, z, 4.00));
-		return true;
+		if(hasGate())
+		{
+			return gateAddress;
+		}
+		return "";
 	}
 
-	public boolean hasGate()
+	public String DialGate(String address)
+	{
+		if (!hasGate()) return "ERROR - No gate connected";
+		return ownedGate.connectOrDisconnect(address,null);
+	}
+	
+	private boolean findGate()
 	{
 		x = this.xCoord;
 		y = this.yCoord;
 		z = this.zCoord;
-		Chunk chunk = worldObj.getChunkFromBlockCoords(x, z);
-		if (chunk != null)
+		if(x==0 && y == 0 & z == 0)
 		{
-			for (Object te : chunk.chunkTileEntityMap.values())
+			return false;
+		}
+		else
+		{
+			Chunk chunk = worldObj.getChunkFromBlockCoords(x, z);
+			if (chunk != null)
 			{
-				if (te instanceof SGBaseTE)
+				for (Object te : chunk.chunkTileEntityMap.values())
 				{
-					this.ownedGate = (SGBaseTE) te;
-					return true;
+					if (te instanceof SGBaseTE)
+					{
+						this.ownedGate = (SGBaseTE) te;
+						this.gateAddress =  this.ownedGate.findHomeAddress();
+						return true;
+					}
 				}
 			}
 		}
 		return false;
+	}
+
+	public boolean hasGate()
+	{
+		if(ownedGate == null)
+		{
+			return findGate();
+		}
+		else
+		{
+			return true;
+		}
+		
 	}
 
 	public String findAddressedStargate(String address)
