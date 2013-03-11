@@ -46,7 +46,7 @@ public class SGExtensions
 
 	public static NaquadahOreWorldGen naquadahOreGenerator;
 	public static Block diallerBlock;
-	public static Block gatePowererBlock;
+	public static Block sgDarkPowerBlock;
 	public static final int GUIELEMENT_GATE = 1;
 	public static final int GUIELEMENT_DHD = 2;
 
@@ -76,7 +76,7 @@ public class SGExtensions
 	void registerBlocks()
 	{
 		diallerBlock = new DiallerBlock(ConfigHandler.blockDiallerID, 0).setBlockName("diallerblock");
-		gatePowererBlock = new PowererBlock(ConfigHandler.blockPowererID, 0).setBlockName("powererblock");
+		sgDarkPowerBlock = new SGDarkPowerBlock(ConfigHandler.blockPowererID, 0).setBlockName("powererblock");
 		sgBaseBlock = new SGBaseBlock(ConfigHandler.blockSGBaseID).setBlockName("stargateBase");
 		sgRingBlock = new SGRingBlock(ConfigHandler.blockSGRingID).setBlockName("stargateRing");
 		sgControllerBlock = new SGControllerBlock(ConfigHandler.blockSGControllerID).setBlockName("stargateController");
@@ -93,10 +93,10 @@ public class SGExtensions
 		GameRegistry.addRecipe(new ItemStack(diallerBlock, 1), "III", "RDR", "III", 'I', Item.ingotIron, 'R', Item.redstone, 'D', sgControllerCrystal);
 		LanguageRegistry.addName(diallerBlock, "Dialling Computer");
 
-		GameRegistry.registerBlock(gatePowererBlock, "blockPowerer");
-		GameRegistry.registerTileEntity(TilePowerer.class, "tilePowerer");
-		GameRegistry.addRecipe(new ItemStack(gatePowererBlock, 1), "IRI", "GDG", "IRI", 'I', Item.ingotIron, 'R', Item.redstone, 'G', Item.ingotGold, 'D', Item.diamond);
-		LanguageRegistry.addName(gatePowererBlock, "Gate Power Interface");
+		GameRegistry.registerBlock(sgDarkPowerBlock, "blockPowerer");
+		GameRegistry.registerTileEntity(SGDarkPowerTE.class, "sgDarkPowerTE");
+		GameRegistry.addRecipe(new ItemStack(sgDarkPowerBlock, 1), "IRI", "GDG", "IRI", 'I', Item.ingotIron, 'R', Item.redstone, 'G', Item.ingotGold, 'D', Item.diamond);
+		LanguageRegistry.addName(sgDarkPowerBlock, "Stargate Power Interface");
 
 		GameRegistry.registerBlock(sgRingBlock, SGRingItem.class,"stargateRing");
 		GameRegistry.registerTileEntity(SGRingTE.class,"SGRingTE");
