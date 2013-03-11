@@ -5,17 +5,20 @@ import java.util.Map;
 
 import dan200.computer.api.IComputerAccess;
 import dan200.computer.api.IPeripheral;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.DimensionManager;
 
-public class TileDialler extends TileEntity implements IPeripheral
+public class SGDarkDiallerTE extends TileEntity implements IPeripheral
 {
 	public int x, y, z;
 	public SGBaseTE ownedGate = null;
 	public String gateAddress;
-
+	
+	public boolean isLinkedToStargate;
+	public int linkedX, linkedY, linkedZ;
 
 	public final String symbolChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	public final int numSymbols = symbolChars.length();
@@ -70,6 +73,26 @@ public class TileDialler extends TileEntity implements IPeripheral
 				return new Object[0];
 		}
 	}
+	
+	@Override
+	public void readFromNBT(NBTTagCompound nbt)
+	{
+		super.readFromNBT(nbt);
+		isLinkedToStargate = nbt.getBoolean("isLinkedToStargate");
+		linkedX = nbt.getInteger("linkedX");
+		linkedY = nbt.getInteger("linkedY");
+		linkedZ = nbt.getInteger("linkedZ");
+	}
+	
+	@Override
+	public void writeToNBT(NBTTagCompound nbt)
+	{
+		super.writeToNBT(nbt);
+		nbt.setBoolean("isLinkedToStargate",isLinkedToStargate);
+		nbt.setInteger("linkedX", linkedX);
+		nbt.setInteger("linkedY", linkedY);
+		nbt.setInteger("linkedZ", linkedZ);
+	}
 
 	@Override
 	public boolean canAttachToSide(int side)
@@ -101,7 +124,18 @@ public class TileDialler extends TileEntity implements IPeripheral
 		Map retMap = new HashMap();
 		if(hasGate())
 		{
-			retMap.put("0", getThisAddress());
+			SGState state = ownedGate.state;
+			String outState = "Unknown";
+			if(state == SGState.Connected) 		outState = "Connected";
+			if(state == SGState.Dialling) 		outState = "Dialling";
+			if(state == SGState.Disconnecting) 	outState = "Disconnecting";
+			if(state == SGState.Idle) 			outState = "Idle";
+			if(state == SGState.InterDialling) 	outState = "Interdialling";
+			if(state == SGState.Transient) 		outState = "Transient";
+			retMap.put(1, getThisAddress());
+			retMap.put(2, ownedGate.numEngagedChevrons);
+			retMap.put(3, outState);
+			retMap.put(4, ownedGate.fuelBuffer);
 			
 		}
 		else
@@ -145,6 +179,65 @@ public class TileDialler extends TileEntity implements IPeripheral
 		}
 	}
 	
+	public double getTEDistance(TileEntity A, TileEntity B)
+	{
+		if(A != null && B != null)
+		{
+			Vector3 APos = new Vector3(A.xCoord,A.yCoord,A.zCoord);
+			Vector3 BPos = new Vector3(B.xCoord,B.yCoord,B.zCoord);
+			Vector3 InvalidPos = new Vector3(0,0,0);
+			if(APos != InvalidPos)
+			{
+				if(BPos != InvalidPos)
+				{
+					return APos.distance(BPos);
+				}
+			}
+		}
+		return -1;
+	}
+	
+	private boolean linkGate(SGBaseTE gate)
+	{
+		if(gate.isMerged)
+		{
+			double Distance = getTEDistance((TileEntity) gate,(TileEntity) this);
+			if(Distance > 0 && Distance < 6)
+			{
+				if(gate.isLinkedToController == false)
+				{
+					ownedGate = gate;
+					linkedX = ((SGBaseTE) gate).xCoord;
+					linkedY = ((SGBaseTE) gate).yCoord;
+					linkedZ = ((SGBaseTE) gate).zCoord;
+					isLinkedToStargate = true;
+					gate.linkedX = this.xCoord;
+					gate.linkedY = this.yCoord;
+					gate.linkedZ = this.zCoord;
+					gate.isLinkedToController = true;
+					gateAddress =  ownedGate.findHomeAddress();
+					return true;
+				}
+				else
+				{
+					if(gate.linkedX == this.xCoord && gate.linkedY == this.yCoord && gate.linkedZ == this.zCoord)
+					{
+						linkedX = gate.xCoord;
+						linkedY = gate.yCoord;
+						linkedZ = gate.zCoord;
+						isLinkedToStargate = true;
+						ownedGate = gate;
+						gateAddress =  ownedGate.findHomeAddress();
+						return true;
+					}
+				}
+			}
+		}
+		this.ownedGate = null;
+		this.isLinkedToStargate = false;
+		return false;
+	}
+	
 	private boolean findGate()
 	{
 		x = this.xCoord;
@@ -157,18 +250,22 @@ public class TileDialler extends TileEntity implements IPeripheral
 		else
 		{
 			Chunk chunk = worldObj.getChunkFromBlockCoords(x, z);
+			TileEntity gate;
+			if(isLinkedToStargate)
+			{
+				gate = worldObj.getBlockTileEntity(linkedX, linkedY, linkedZ);
+				if(gate instanceof SGBaseTE)
+				{
+					return linkGate((SGBaseTE) gate);
+				}
+			}
 			if (chunk != null)
 			{
 				for (Object te : chunk.chunkTileEntityMap.values())
 				{
 					if (te instanceof SGBaseTE)
 					{
-						if(((SGBaseTE)te).isMerged)
-						{
-							this.ownedGate = (SGBaseTE) te;
-							this.gateAddress =  this.ownedGate.findHomeAddress();
-							return true;
-						}
+						return linkGate((SGBaseTE) te);
 					}
 				}
 			}
@@ -176,6 +273,16 @@ public class TileDialler extends TileEntity implements IPeripheral
 		return false;
 	}
 
+	public void unlinkStargate()
+	{
+		if(isLinkedToStargate)
+		{
+			ownedGate.clearLinkToController();
+			ownedGate = null;
+			isLinkedToStargate = false;
+		}
+	}
+	
 	public boolean hasGate()
 	{
 		if(ownedGate == null)

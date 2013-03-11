@@ -11,6 +11,7 @@ public class ConfigHandler
 	public static boolean regenOres;
 	public static boolean addOres;
 	public static int bcPower;
+	public static int icPower;
 	public static int fuelAm;
 	public static int maxOpen;
 	public static int blockSGRingID;
@@ -43,6 +44,9 @@ public class ConfigHandler
 		
 		Property bcPowerFuel = config.get("Power Configuration","BC Power per Fuel Value",120);
 		bcPower = bcPowerFuel.getInt();
+		
+		Property icPowerFuel = config.get("Power Configuration","IC2 Power per Fuel Value",300);
+		icPower = icPowerFuel.getInt();
 		
 		Property fuelAmount = config.get("Power Configuration","Fuel Values per Naquadah",20*60*20);
 		fuelAm = fuelAmount.getInt();

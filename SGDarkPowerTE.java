@@ -1,12 +1,14 @@
 package sgextensions;
 
+import ic2.api.Direction;
+import ic2.api.energy.tile.IEnergySink;
 import buildcraft.api.power.IPowerProvider;
 import buildcraft.api.power.IPowerReceptor;
 import buildcraft.api.power.PowerFramework;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.chunk.Chunk;
 
-public class SGDarkPowerTE extends TileEntity implements IPowerReceptor
+public class SGDarkPowerTE extends TileEntity implements IPowerReceptor, IEnergySink
 {
 	boolean isFull, isGateActive;
 	private int bcPowerReq;
@@ -14,8 +16,10 @@ public class SGDarkPowerTE extends TileEntity implements IPowerReceptor
 	private PowerFramework powerFrame;
 	private SGBaseTE connectedGate;
 	private int BCFuel = SGExtensions.bcPowerPerFuel;
+	private int ICFuel = SGExtensions.icPowerPerFuel;
 	private float TimeToRepeat;
 	public int storedEnergy;
+	public int ic2Buffer;
 
 	public SGDarkPowerTE()
 	{
@@ -27,18 +31,36 @@ public class SGDarkPowerTE extends TileEntity implements IPowerReceptor
 			InitGateIntegration();
 		}
 	}
+	
+	public double getTEDistance(TileEntity A, TileEntity B)
+	{
+		if(A != null && B != null)
+		{
+			Vector3 APos = new Vector3(A.xCoord,A.yCoord,A.zCoord);
+			Vector3 BPos = new Vector3(B.xCoord,B.yCoord,B.zCoord);
+			Vector3 InvalidPos = new Vector3(0,0,0);
+			if(APos != InvalidPos)
+			{
+				if(BPos != InvalidPos)
+				{
+					return APos.distance(BPos);
+				}
+			}
+		}
+		return -1;
+	}
 
 	public void InitGateIntegration()
 	{
 		if(xCoord == 0 && yCoord == 0 && zCoord == 0)
 		{
-			System.out.printf("InitGateInt: Pos (%d, %d) Try later\n", this.xCoord, this.zCoord);
+			//System.out.printf("InitGateInt: Pos (%d, %d) Try later\n", this.xCoord, this.zCoord);
 			TimeToRepeat = 10;
 		}
 		else
 		{
 			TimeToRepeat = 600;
-			System.out.printf("InitGateInt: Pos (%d, %d)\n", this.xCoord, this.zCoord);
+			//System.out.printf("InitGateInt: Pos (%d, %d)\n", this.xCoord, this.zCoord);
 			Chunk chunkvar = worldObj.getChunkFromBlockCoords(xCoord, zCoord);
 			for (Object x : chunkvar.chunkTileEntityMap.values())
 			{
@@ -46,10 +68,14 @@ public class SGDarkPowerTE extends TileEntity implements IPowerReceptor
 				{
 					if(((SGBaseTE)x).isMerged)
 					{
-						TimeToRepeat = 600;
-						System.out.printf("InitGateInt: GATE FOUND!");
-						connectedGate = (SGBaseTE) x;
-						isGateActive = connectedGate.isConnected();
+						double Distance = getTEDistance((TileEntity) x,(TileEntity) this);
+						if(Distance > 0 && Distance < 6)
+						{
+							TimeToRepeat = -1;
+							//System.out.printf("InitGateInt: GATE FOUND!");
+							connectedGate = (SGBaseTE) x;
+							isGateActive = connectedGate.isConnected();
+						}
 					}
 				}
 			}
@@ -120,8 +146,47 @@ public class SGDarkPowerTE extends TileEntity implements IPowerReceptor
 	{
 		if (!isFull || isGateActive)
 		{
-			return 120;
+			return BCFuel;
 		}
 		return 0;
+	}
+
+	@Override
+	public boolean acceptsEnergyFrom(TileEntity emitter, Direction direction) {
+		return true;
+	}
+
+
+	@Override
+	public int demandsEnergy() {
+		// TODO Auto-generated method stub
+		if(connectedGate != null)
+		{
+			if(connectedGate.fuelBuffer < connectedGate.maxFuelBuffer)
+				return ICFuel;
+		}
+		return 0;
+	}
+
+	@Override
+	public int injectEnergy(Direction directionFrom, int amount) {
+		// TODO Auto-generated method stub
+		int toMaxFuel = connectedGate.maxFuelBuffer - connectedGate.fuelBuffer;
+		int in = (int) Math.floor((amount+ic2Buffer)/ICFuel);
+		in = Math.min(in,toMaxFuel);
+		int excess = (ic2Buffer + amount) - (in*ICFuel);
+		connectedGate.fuelBuffer += in;
+		ic2Buffer = excess;
+		return 0;
+	}
+
+	@Override
+	public int getMaxSafeInput() {
+		return Integer.MAX_VALUE;
+	}
+
+	@Override
+	public boolean isAddedToEnergyNet() {
+		return true;
 	}
 }

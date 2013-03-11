@@ -13,6 +13,7 @@ import cpw.mods.fml.common.registry.VillagerRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.WeightedRandomChestContent;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ChestGenHooks;
@@ -45,6 +46,7 @@ public class SGExtensions
 	public static boolean addOres;
 	
 	public static int bcPowerPerFuel;
+	public static int icPowerPerFuel;
 	public static int fuelAmount;
 	public static int maxOpenTime;
 
@@ -70,6 +72,7 @@ public class SGExtensions
 		addOresToExistingWorlds = ConfigHandler.regenOres;
 		addOres = ConfigHandler.addOres;
 		bcPowerPerFuel = ConfigHandler.bcPower;
+		icPowerPerFuel = ConfigHandler.icPower;
 		fuelAmount = ConfigHandler.fuelAm;
 		maxOpenTime = ConfigHandler.maxOpen;
 		
@@ -83,7 +86,7 @@ public class SGExtensions
 	}
 	void registerBlocks()
 	{
-		diallerBlock = new DiallerBlock(ConfigHandler.blockDiallerID, 0).setBlockName("diallerblock");
+		diallerBlock = new SGDarkDiallerBlock(ConfigHandler.blockDiallerID, 0).setBlockName("diallerblock");
 		sgDarkPowerBlock = new SGDarkPowerBlock(ConfigHandler.blockPowererID, 0).setBlockName("powererblock");
 		sgBaseBlock = new SGBaseBlock(ConfigHandler.blockSGBaseID).setBlockName("stargateBase");
 		sgRingBlock = new SGRingBlock(ConfigHandler.blockSGRingID).setBlockName("stargateRing");
@@ -97,7 +100,7 @@ public class SGExtensions
 		ItemStack sgChevronBlock = new ItemStack(sgRingBlock, 1, 1);
 
 		GameRegistry.registerBlock(diallerBlock, "blockDialler");
-		GameRegistry.registerTileEntity(TileDialler.class, "tileDialler");
+		GameRegistry.registerTileEntity(SGDarkDiallerTE.class, "tileDialler");
 		GameRegistry.addRecipe(new ItemStack(diallerBlock, 1), "III", "RDR", "III", 'I', Item.ingotIron, 'R', Item.redstone, 'D', sgControllerCrystal);
 		LanguageRegistry.addName(diallerBlock, "Dialling Computer");
 

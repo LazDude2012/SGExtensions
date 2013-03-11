@@ -6,9 +6,9 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-public class DiallerBlock extends BlockContainer
+public class SGDarkDiallerBlock extends BlockContainer
 {
-	public DiallerBlock(int i, int j)
+	public SGDarkDiallerBlock(int i, int j)
 	{
 		super(i, j, Material.rock);
 		this.setCreativeTab(CreativeTabs.tabMisc);
@@ -22,6 +22,10 @@ public class DiallerBlock extends BlockContainer
 	@Override
 	public int getBlockTextureFromSide(int i)
 	{
+		if(i <= 1)
+		{
+			return 1;
+		}
 		return 0;
 	}
 
@@ -29,6 +33,16 @@ public class DiallerBlock extends BlockContainer
 	@Override
 	public TileEntity createNewTileEntity(World var1)
 	{
-		return new TileDialler();
+		return new SGDarkDiallerTE();
+	}
+	
+	public void breakBlock(World world, int x, int y, int z, int id, int data)
+	{
+		TileEntity Dialler = world.getBlockTileEntity(x,y,z);
+		if(Dialler instanceof SGDarkDiallerTE)
+		{
+			SGDarkDiallerTE Dial = (SGDarkDiallerTE) Dialler;
+			Dial.unlinkStargate();
+		}
 	}
 }
