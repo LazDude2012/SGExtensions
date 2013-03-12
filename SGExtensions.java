@@ -20,6 +20,7 @@ import net.minecraftforge.common.ChestGenHooks;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.world.ChunkDataEvent;
+import net.minecraftforge.oredict.ShapedOreRecipe;
 
 @Mod(modid = "SGExtensions", name = "SG Darkcraft Edition", version = "pre1")
 @NetworkMod(clientSideRequired = true, serverSideRequired = true)
@@ -51,7 +52,10 @@ public class SGExtensions
 	public static int bcPowerPerFuel;
 	public static int icPowerPerFuel;
 	public static int fuelAmount;
+	public static int fuelStore = 10;
 	public static int maxOpenTime;
+	
+	public static Item stargateFuel;
 
 	public static NaquadahOreWorldGen naquadahOreGenerator;
 	public static Block diallerBlock;
@@ -139,8 +143,8 @@ public class SGExtensions
 	}
 	void registerItems()
 	{
-        ItemStack blueDye = new ItemStack(Item.dyePowder, 1, 4);
-        ItemStack orangeDye = new ItemStack(Item.dyePowder, 1, 14);
+        String blueDye = new String("dyeBlue");
+        String orangeDye = new String("dyeOrange");
 
         naquadah = new BaseItem(ConfigHandler.itemNaquadahID, "/sgextensions/resources/textures.png").setItemName("naquadah").setIconIndex(0x41);
         naquadahIngot = new BaseItem(ConfigHandler.itemNaqIngotID, "/sgextensions/resources/textures.png").setItemName("naquadahIngot").setIconIndex(0x42);
@@ -156,17 +160,25 @@ public class SGExtensions
 
 		GameRegistry.registerItem(sgCoreCrystal, "crystalSGCore");
         LanguageRegistry.addName(sgCoreCrystal, "Stargate Core Crystal");
-        GameRegistry.addRecipe(new ItemStack(sgCoreCrystal, 1), "bbr", "rdb", "brb", 'b', blueDye, 'r', Item.redstone, 'd', Item.diamond);
+        GameRegistry.addRecipe(new ShapedOreRecipe(sgCoreCrystal, true, new Object[]{
+        		"bbr", "rdb", "brb",
+        		Character.valueOf('b'), blueDye, Character.valueOf('r'), Item.redstone, Character.valueOf('d'), Item.diamond
+        }));
 
 		GameRegistry.registerItem(sgControllerCrystal, "crystalSGControl");
         LanguageRegistry.addName(sgControllerCrystal, "DHD Control Crystal");
-        GameRegistry.addRecipe(new ItemStack(sgControllerCrystal, 1), "roo", "odr", "oor", 'o', orangeDye, 'r', Item.redstone, 'd', Item.diamond );
+        GameRegistry.addRecipe(new ShapedOreRecipe(sgControllerCrystal, true, new Object[]{
+        		"roo", "odr", "oor",
+        		Character.valueOf('o'), orangeDye, Character.valueOf('r'), Item.redstone, Character.valueOf('d'), Item.diamond
+        }));
+        
+        stargateFuel = naquadah;
 	}
 	void registerRandomItems()
 	{
 		String[] categories = {ChestGenHooks.MINESHAFT_CORRIDOR,
 				ChestGenHooks.PYRAMID_DESERT_CHEST, ChestGenHooks.PYRAMID_JUNGLE_CHEST,
-				ChestGenHooks.STRONGHOLD_LIBRARY, ChestGenHooks.VILLAGE_BLACKSMITH};
+				ChestGenHooks.STRONGHOLD_LIBRARY};
 		addRandomChestItem(new ItemStack(sgBaseBlock), 1, 1, 1, categories);
 		addRandomChestItem(new ItemStack(sgRingBlock, 1, 0), 1, 15, 1, categories);
 		addRandomChestItem(new ItemStack(sgRingBlock, 1, 1), 1, 13, 1, categories);
