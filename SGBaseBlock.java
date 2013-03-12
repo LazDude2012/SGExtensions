@@ -66,7 +66,7 @@ public class SGBaseBlock extends Base4WayBlock<SGBaseTE>
 	public void onBlockPlacedBy(World world, int x, int y, int z, EntityLiving player)
 	{
 		int data = Math.round((180 - player.rotationYaw) / 90) & 3;
-		System.out.printf("SGBaseBlock.onBlockPlacedBy: yaw = %.1f data = %d\n", player.rotationYaw, data);
+		//System.out.printf("SGBaseBlock.onBlockPlacedBy: yaw = %.1f data = %d\n", player.rotationYaw, data);
 		world.setBlockMetadataWithNotify(x, y, z, data);
 		if (!world.isRemote)
 			checkForMerge(world, x, y, z);
@@ -78,11 +78,11 @@ public class SGBaseBlock extends Base4WayBlock<SGBaseTE>
 	{
 		String Side = world.isRemote ? "Client" : "Server";
 		SGBaseTE te = getTileEntity(world, x, y, z);
-		System.out.printf("SGBaseBlock.onBlockActivated: %s: Tile entity = %s\n", Side, te);
+		//System.out.printf("SGBaseBlock.onBlockActivated: %s: Tile entity = %s\n", Side, te);
 		if (te != null)
 		{
 			if (debugMerge)
-				System.out.printf("SGBaseBlock.onBlockActivated: %s: isMerged = %s\n", Side, te.isMerged);
+				//System.out.printf("SGBaseBlock.onBlockActivated: %s: isMerged = %s\n", Side, te.isMerged);
 			if (!world.isRemote)
 				te.dumpChunkLoadingState("SGBaseBlock.onBlockActivated");
 			if (te.isMerged)
