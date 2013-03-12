@@ -163,7 +163,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			if(irisVarState == 0)
 			{
 				irisVarState = 1;
-				irisSlide = 9;
+				irisSlide = SGExtensions.irisFrames - 1;
 				irisTimer = irisTimerVal;
 			}
 			return "Iris closed";
@@ -586,7 +586,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 					if(irisState() == "Iris - Opening")
 					{
 						irisSlide++;
-						if(irisSlide >= 10)
+						if(irisSlide >= SGExtensions.irisFrames)
 						{
 							irisVarState = 0;
 						}

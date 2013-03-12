@@ -46,6 +46,8 @@ public class SGExtensions
 	public static boolean addOres;
 	public static boolean irisKillClearInv;
 	
+	public static int irisFrames = 10;
+	
 	public static int bcPowerPerFuel;
 	public static int icPowerPerFuel;
 	public static int fuelAmount;

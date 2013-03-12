@@ -363,8 +363,8 @@ class SGBaseTERenderer extends TileEntitySpecialRenderer
 		}
 		else
 		{
-			double tX = 0.05+(x/(4*10)) + ((double)slide/(double)10);
-			System.out.printf("Slide: %d\n", slide);
+			double tX = ((double)1/((double) 2* (double) SGExtensions.irisFrames))+(x/(4*SGExtensions.irisFrames)) + ((double)slide/(double)SGExtensions.irisFrames);
+			//System.out.printf("Slide: %d\n", slide);
 			GL11.glTexCoord2d(tX,0.5+ y/4);
 		}
 		GL11.glVertex3d(x, y, z);
