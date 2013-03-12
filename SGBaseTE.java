@@ -63,13 +63,14 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	final static double closingTransientRandomness = 0.25;
 	final static double transientDamageRate = 50;
 	final static int fuelPerItem = SGExtensions.fuelAmount;
-	final static int maxFuelBuffer = 2 * fuelPerItem;
+	final static int maxFuelBuffer = SGExtensions.fuelStore * fuelPerItem;
 	final static int fuelToOpen = fuelPerItem;
 	final static int irisTimerVal = 2;
 
 	static Random random = new Random();
 	static DamageSource transientDamage = new TransientDamageSource();
 	static DamageSource irisDamage = new irisDamageSource();
+	static DamageSource recieveDamage = new recieveDamageSource();
 
 	public boolean isMerged;
 	
@@ -94,7 +95,9 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	public boolean safeDial = false;
 	public boolean quickDial = false;
 	
-	IInventory inventory = new InventoryBasic("Stargate", 4);
+	IInventory inventory = new InventoryBasic("Stargate", 7);
+	final static int upgradeSlots = 3;
+	final static int fuelSlots = 4;
 	final static int fuelSlot = 0;
 
 	//ArrayList<PendingTeleportation> pendingTeleportations = new ArrayList<PendingTeleportation>();
@@ -417,7 +420,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	{
 		if(state != SGState.Idle)
 		{
-			boolean canDisconnect = true; //isInitiator;
+			boolean canDisconnect = isInitiator; //isInitiator;
 			SGBaseTE dte = getConnectedStargateTE();
 			boolean validConnection =
 					(dte != null) && (dte.getConnectedStargateTE() == this);
@@ -445,7 +448,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		} 
 		else
 		{
-			boolean canDisconnect = true; //isInitiator;
+			boolean canDisconnect = isInitiator; //isInitiator;
 			SGBaseTE dte = getConnectedStargateTE();
 			boolean validConnection =
 					(dte != null) && (dte.getConnectedStargateTE() == this);
@@ -808,14 +811,16 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			//sendClientEvent(SGEvent.Connect, 0);
 			if(safeDial == true)
 			{
-				System.out.printf("SGBaseTE: Safe dial\n");
+				//System.out.printf("SGBaseTE: Safe dial\n");
 				enterState(SGState.Connected, 20*60*SGExtensions.maxOpenTime);
 				safeDial = shouldSafeDial();
 				quickDial = shouldQuickDial();
 			}
 			else
 			{
-				System.out.printf("SGBaseTE: Unsafe dial\n");
+				safeDial = shouldSafeDial();
+				quickDial = shouldQuickDial();
+				//System.out.printf("SGBaseTE: Unsafe dial\n");
 				enterState(SGState.Transient, transientDuration);
 			}
 			playSoundEffect("sgextensions.sg_open", 1.0F, 1.0F);
@@ -835,7 +840,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 	public void entityInPortal(Entity entity)
 	{
-		if (state == SGState.Connected && irisState() != "Iris - Closed")
+		if (state == SGState.Connected && (isInitiator) && irisState() != "Iris - Closed")
 		{
 			//System.out.printf("SGBaseTE.entityInPortal: global (%.3f, %.3f, %.3f)\n",
 			//	entity.posX, entity.posY, entity.posZ);
@@ -873,6 +878,14 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 					}
 				}
 			}
+		}
+		else if(isInitiator == false)
+		{
+			if(SGExtensions.irisKillClearInv)
+			{
+				((EntityPlayerMP)entity).inventory.clearInventory(-1, -1);
+			}
+			((EntityPlayerMP)entity).attackEntityFrom(recieveDamage, 1000);
 		}
 	}
 
@@ -1044,6 +1057,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 				case Disconnecting:
 					initiateClosingTransient();
 					break;
+				default:
+					break;
 			}
 		}
 	}
@@ -1093,6 +1108,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 				//setRingAngle(Utils.relaxAngle(ringAngle, targetRingAngle, diallingRelaxationRate));
 				updateRingAngle();
 				//System.out.printf("SGBaseTe: Ring angle now %s\n", ringAngle);
+				break;
+			default:
 				break;
 		}
 	}
@@ -1293,6 +1310,21 @@ class irisDamageSource extends DamageSource
 	public String getDeathMessage(EntityPlayer player)
 	{
 		return player.username + " walked into an iris";
+	}
+
+}
+
+class recieveDamageSource extends DamageSource
+{
+
+	public recieveDamageSource()
+	{
+		super("sgRecieve");
+	}
+
+	public String getDeathMessage(EntityPlayer player)
+	{
+		return player.username + " walked through a receiving stargate";
 	}
 
 }
