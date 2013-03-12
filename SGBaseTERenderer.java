@@ -8,8 +8,12 @@ package sgextensions;
 
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.chunk.Chunk;
+
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+
+import sgextensions.SGAddressing.AddressingError;
 
 class SGBaseTERenderer extends TileEntitySpecialRenderer
 {
@@ -42,6 +46,8 @@ class SGBaseTERenderer extends TileEntitySpecialRenderer
 
 	static double s[] = new double[numRingSegments + 1];
 	static double c[] = new double[numRingSegments + 1];
+	
+	private int printTime = 0;
 
 	static
 	{
@@ -80,6 +86,13 @@ class SGBaseTERenderer extends TileEntitySpecialRenderer
 		renderRing(ringMidRadius, ringOuterRadius, RingType.Outer);
 		renderInnerRing(te, t);
 		renderChevrons(te);
+		SGBaseTE test = SGAddressing.findAddressedStargate(te.findHomeAddress());
+		String IState = test.irisState();
+		boolean irisClosed = (IState == "Iris - Closed" || IState == "Iris - Opening" || IState == "Iris - Closing");
+		if(irisClosed == true)
+		{
+			renderIris(te);
+		}
 		if (te.isConnected())
 			renderEventHorizon(te);
 	}
@@ -262,30 +275,99 @@ class SGBaseTERenderer extends TileEntitySpecialRenderer
 		GL11.glEnd();
 		GL11.glEnable(GL11.GL_LIGHTING);
 	}
+	 	
+	void renderIris(SGBaseTE te)
+	{
+		SGBaseTE test = SGAddressing.findAddressedStargate(te.findHomeAddress());
+		double distance = 0.1;
+		bindTextureByName("/sgextensions/resources/iris.png");
+		GL11.glDisable(GL11.GL_CULL_FACE);
+		GL11.glNormal3d(0, 0, 1);
+		int slide = test.irisSlide;
+		for (int i = 0; i < ehGridRadialSize; i++)
+		{
+			GL11.glBegin(GL11.GL_QUAD_STRIP);
+			for (int j = 0; j <= ehGridPolarSize; j++)
+			{
+				irisVertex(i,j,distance,slide, false);
+				irisVertex(i+1,j,distance,slide, false);
+			}
+			GL11.glEnd();
+		}
+	}
 
 	void renderEventHorizon(SGBaseTE te)
 	{
+		SGBaseTE test = SGAddressing.findAddressedStargate(te.findHomeAddress());
+		String IState = test.irisState();
+		boolean irisClosed = (IState == "Iris - Closed" || IState == "Iris - Opening" || IState == "Iris - Closing");
 		bindTextureByName("/misc/water.png");
 		GL11.glDisable(GL11.GL_CULL_FACE);
 		GL11.glNormal3d(0, 0, 1);
+		printTime++;
 		double grid[][] = te.getEventHorizonGrid()[0];
+		
 		for (int i = 1; i < ehGridRadialSize; i++)
 		{
 			GL11.glBegin(GL11.GL_QUAD_STRIP);
 			for (int j = 0; j <= ehGridPolarSize; j++)
 			{
-				ehVertex(grid, i, j);
-				ehVertex(grid, i + 1, j);
+				if(irisClosed == false)
+				{
+					ehVertex(grid, i, j);
+					ehVertex(grid, i + 1, j);
+				}
+				else
+				{
+					flatVertex(i,j,0);
+					flatVertex(i+1,j,0);
+				}
 			}
 			GL11.glEnd();
 		}
 		GL11.glBegin(GL11.GL_TRIANGLE_FAN);
 		GL11.glTexCoord2d(0, 0);
-		GL11.glVertex3d(0, 0, grid[1][0]);
-		for (int j = 0; j <= ehGridPolarSize; j++)
-			ehVertex(grid, 1, j);
+		if(irisClosed == true)
+		{
+			GL11.glVertex3d(0, 0, 0);
+			for (int j = 0; j <= ehGridPolarSize; j++)
+				flatVertex(1, j, 0);
+		}
+		else
+		{
+			GL11.glVertex3d(0, 0, grid[1][0]);
+			for (int j = 0; j <= ehGridPolarSize; j++)
+				ehVertex(grid, 1, j);
+		}
 		GL11.glEnd();
 		GL11.glEnable(GL11.GL_CULL_FACE);
+	}
+	
+	void flatVertex(int i,int j,double z)
+	{
+		double r = i * ehBandWidth;
+		double x = r * c[j];
+		double y = r * s[j];
+		GL11.glTexCoord2d(x, y);
+		GL11.glVertex3d(x, y, z);
+	}
+	
+	void irisVertex(int i,int j, double z, int slide, boolean centre)
+	{
+		double r = i * ehBandWidth;
+		double x = r * c[j];
+		double y = r * s[j];
+		if(centre)
+		{
+			GL11.glTexCoord2d((slide)+0.5+x,0.5+ y);
+		}
+		else
+		{
+			double tX = 0.05+(x/(4*10)) + ((double)slide/(double)10);
+			System.out.printf("Slide: %d\n", slide);
+			GL11.glTexCoord2d(tX,0.5+ y/4);
+		}
+		GL11.glVertex3d(x, y, z);
 	}
 
 	void ehVertex(double[][] grid, int i, int j)

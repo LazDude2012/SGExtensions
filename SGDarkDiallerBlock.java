@@ -22,10 +22,10 @@ public class SGDarkDiallerBlock extends BlockContainer
 	@Override
 	public int getBlockTextureFromSide(int i)
 	{
-		if(i <= 1)
-		{
+		if(i == 0)
+			return 2;
+		else if(i == 1)
 			return 1;
-		}
 		return 0;
 	}
 

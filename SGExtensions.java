@@ -44,6 +44,7 @@ public class SGExtensions
 
 	public static boolean addOresToExistingWorlds;
 	public static boolean addOres;
+	public static boolean irisKillClearInv;
 	
 	public static int bcPowerPerFuel;
 	public static int icPowerPerFuel;
@@ -75,6 +76,7 @@ public class SGExtensions
 		icPowerPerFuel = ConfigHandler.icPower;
 		fuelAmount = ConfigHandler.fuelAm;
 		maxOpenTime = ConfigHandler.maxOpen;
+		irisKillClearInv = ConfigHandler.irisKillClear;
 		
 		registerItems();
         registerBlocks();

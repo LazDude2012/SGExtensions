@@ -43,7 +43,7 @@ public class SGDarkDiallerTE extends TileEntity implements IPeripheral
 	@Override
 	public String[] getMethodNames()
 	{
-		return new String[]{"dialGate", "hasGate", "thisAddress", "findAddress","gateInfo","magicDial"};
+		return new String[]{"dialGate", "hasGate", "thisAddress", "findAddress","gateInfo","closeIris","openIris","toggleIris","magicDial"};
 	}
 
 	@Override
@@ -62,6 +62,12 @@ public class SGDarkDiallerTE extends TileEntity implements IPeripheral
 			case 4:
 				return new Object[]{getGateInfo()};
 			case 5:
+				return new Object[]{closeIris()};
+			case 6:
+				return new Object[]{openIris()};
+			case 7:
+				return new Object[]{toggleIris()};
+			case 8:
 			{
 				String add = arguments[0].toString();
 				int safe = (int) Double.parseDouble(arguments[1].toString());
@@ -110,6 +116,33 @@ public class SGDarkDiallerTE extends TileEntity implements IPeripheral
 	{
 	}
 	
+	public String openIris()
+	{
+		if(hasGate())
+		{
+			return ownedGate.openIris();
+		}
+		return "Error - No gate";
+	}
+	
+	public String closeIris()
+	{
+		if(hasGate())
+		{
+			return ownedGate.closeIris();
+		}
+		return "Error - No gate";
+	}
+	
+	public String toggleIris()
+	{
+		if(hasGate())
+		{
+			return ownedGate.toggleIris();
+		}
+		return "Error - No gate";
+	}
+	
 	public String getThisAddress()
 	{
 		if(hasGate())
@@ -136,6 +169,8 @@ public class SGDarkDiallerTE extends TileEntity implements IPeripheral
 			retMap.put(2, ownedGate.numEngagedChevrons);
 			retMap.put(3, outState);
 			retMap.put(4, ownedGate.fuelBuffer);
+			retMap.put(5, ownedGate.irisType);
+			retMap.put(6, ownedGate.irisState());
 			
 		}
 		else

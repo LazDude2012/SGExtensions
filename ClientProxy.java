@@ -30,6 +30,7 @@ public class ClientProxy extends CommonProxy
 	{
 		MinecraftForgeClient.preloadTexture("/sgextensions/resources/blocks.png");
 		MinecraftForgeClient.preloadTexture("/sgextensions/resources/textures.png");
+		MinecraftForgeClient.preloadTexture("/sgextensions/resources/iris.png");
 	}
 
 	@Override

@@ -6,6 +6,7 @@
 
 package sgextensions;
 
+import cpw.mods.fml.common.network.Player;
 import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
@@ -64,15 +65,24 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	final static int fuelPerItem = SGExtensions.fuelAmount;
 	final static int maxFuelBuffer = 2 * fuelPerItem;
 	final static int fuelToOpen = fuelPerItem;
+	final static int irisTimerVal = 2;
 
 	static Random random = new Random();
 	static DamageSource transientDamage = new TransientDamageSource();
+	static DamageSource irisDamage = new irisDamageSource();
 
 	public boolean isMerged;
+	
+	public int irisVarState;
+	public String irisType = "iris";
+	public int irisSlide;
+	private int irisTimer;
+	
 	public SGState state = SGState.Idle;
 	public double ringAngle, lastRingAngle, targetRingAngle; // degrees
 	public int numEngagedChevrons;
 	public String dialledAddress = "";
+
 	//public String dialledAddress =  "MYNCRFT"; // "AAAAAAA";
 	public boolean isLinkedToController;
 	public int linkedX, linkedY, linkedZ;
@@ -107,6 +117,78 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			return (SGBaseTE) te;
 		else
 			return null;
+	}
+	
+	public String irisState()
+	{
+		//System.out.printf("SGBaseTE Iris State - %d\n", irisVarState);
+		if(irisType == null)
+		{
+			return "Error - No Iris";
+		}
+		else
+		{
+			if(irisVarState == 0)
+				return "Iris - Open";
+			else if(irisVarState == 1)
+				return "Iris - Closing";
+			else if(irisVarState == 2)
+				return "Iris - Closed";
+			else if(irisVarState == 3)
+				return "Iris - Opening";
+		}
+		return "Error - Unknown state";
+	}
+	
+	public String openIris()
+	{
+		if(irisType != null)
+		{
+			if(irisVarState == 2)
+			{
+				irisVarState = 3;
+				irisSlide = 0;
+				irisTimer = irisTimerVal;
+			}
+			return "Iris opened";
+		}
+		return "Error - No iris";
+	}
+	
+	public String closeIris()
+	{
+		System.out.printf("Stargate - Iris closing\n");
+		if(irisType != null)
+		{
+			if(irisVarState == 0)
+			{
+				irisVarState = 1;
+				irisSlide = 9;
+				irisTimer = irisTimerVal;
+			}
+			return "Iris closed";
+		}
+		return "Error - No iris";
+	}
+	
+	public String toggleIris()
+	{
+		if(irisType != null)
+		{
+			if(irisState() == "Iris - Open")
+			{
+				return closeIris();
+			}
+			else if(irisState() == "Iris - Closed")
+			{
+				return openIris();
+			}
+			else
+			{
+				return "Error - Iris moving";
+			}
+		}
+		return "Error - No iris";
 	}
 
 	public static SGBaseTE at(SGLocation loc)
@@ -147,6 +229,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		linkedX = nbt.getInteger("linkedX");
 		linkedY = nbt.getInteger("linkedY");
 		linkedZ = nbt.getInteger("linkedZ");
+		irisVarState = nbt.getInteger("irisState");
 		if (nbt.hasKey("connectedLocation"))
 			connectedLocation = new SGLocation(nbt.getCompoundTag("connectedLocation"));
 		isInitiator = nbt.getBoolean("isInitiator");
@@ -163,6 +246,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		nbt.setBoolean("isMerged", isMerged);
 		nbt.setInteger("state", state.ordinal());
 		nbt.setDouble("targetRingAngle", targetRingAngle);
+		nbt.setInteger("irisState", irisVarState);
 		nbt.setInteger("numEngagedChevrons", numEngagedChevrons);
 		//nbt.setString("homeAddress", homeAddress);
 		nbt.setString("dialledAddress", dialledAddress);
@@ -398,9 +482,9 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			diallingFailure(player, "Stargate has insufficient fuel");
 			return "Error - Stargate has insufficient fuel";
 		}
-		safeDial = safeDial || shouldSafeDial() || dte.shouldSafeDial();
-		quickDial = quickDial || shouldQuickDial() || dte.shouldQuickDial();
-		dte.safeDial = this.safeDial;
+		safeDial = safeDial || shouldSafeDial();
+		quickDial = quickDial || shouldQuickDial();
+		dte.safeDial = this.safeDial || dte.shouldSafeDial();
 		dte.quickDial = this.quickDial;
 		startDiallingStargate(address, dte, true);
 		dte.startDiallingStargate(homeAddress, this, false);
@@ -491,6 +575,33 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		{
 			//performPendingTeleportations();
 			fuelUsage();
+			
+			if(irisState() == "Iris - Opening" || irisState() == "Iris - Closing")
+			{
+				irisTimer--;
+				if(irisTimer <= 0)
+				{
+					System.out.printf("Iris Slide: (%d)\n", irisSlide);
+					irisTimer = irisTimerVal;
+					if(irisState() == "Iris - Opening")
+					{
+						irisSlide++;
+						if(irisSlide >= 10)
+						{
+							irisVarState = 0;
+						}
+					}
+					else
+					{
+						irisSlide --;
+						if(irisSlide == 0)
+						{
+							irisVarState = 2;
+						}
+					}
+				}
+			}
+			
 			if (timeout > 0)
 			{
 				//int dimension = worldObj.provider.dimensionId;
@@ -677,6 +788,10 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	
 	boolean shouldSafeDial()
 	{
+		if(irisState() != "Iris - Open" && irisState() != "Error - No iris")
+		{
+			return true;
+		}
 		return false;
 	}
 	
@@ -720,7 +835,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 	public void entityInPortal(Entity entity)
 	{
-		if (state == SGState.Connected)
+		if (state == SGState.Connected && irisState() != "Iris - Closed")
 		{
 			//System.out.printf("SGBaseTE.entityInPortal: global (%.3f, %.3f, %.3f)\n",
 			//	entity.posX, entity.posY, entity.posZ);
@@ -739,8 +854,23 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 				SGBaseTE dte = getConnectedStargateTE();
 				if (dte != null)
 				{
-					Trans3 dt = dte.localToGlobalTransformation();
-					teleportEntity(entity, t, dt, connectedLocation.dimension);
+					if(dte.irisState() != "Iris - Closed")
+					{
+						Trans3 dt = dte.localToGlobalTransformation();
+						teleportEntity(entity, t, dt, connectedLocation.dimension);
+					}
+					else if(entity instanceof EntityPlayerMP)
+					{
+						if(SGExtensions.irisKillClearInv)
+						{
+							((EntityPlayerMP)entity).inventory.clearInventory(-1, -1);
+						}
+						((EntityPlayerMP)entity).attackEntityFrom(irisDamage, 1000);
+					}
+					else
+					{
+						entity.setDead();
+					}
 				}
 			}
 		}
@@ -1148,6 +1278,21 @@ class TransientDamageSource extends DamageSource
 	public String getDeathMessage(EntityPlayer player)
 	{
 		return player.username + " was torn apart by an event horizon";
+	}
+
+}
+
+class irisDamageSource extends DamageSource
+{
+
+	public irisDamageSource()
+	{
+		super("sgIris");
+	}
+
+	public String getDeathMessage(EntityPlayer player)
+	{
+		return player.username + " walked into an iris";
 	}
 
 }

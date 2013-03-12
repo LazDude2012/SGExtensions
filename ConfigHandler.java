@@ -14,6 +14,7 @@ public class ConfigHandler
 	public static int icPower;
 	public static int fuelAm;
 	public static int maxOpen;
+	public static boolean irisKillClear;
 	public static int blockSGRingID;
 	public static int blockSGBaseID;
 	public static int blockSGPortalID;
@@ -53,6 +54,9 @@ public class ConfigHandler
 		
 		Property maxOpenT = config.get("Gate Configuration","Maximum open time (Minutes)",38);
 		maxOpen = maxOpenT.getInt();
+		
+		Property irisClear = config.get("Gate Configuration","Iris kill clears inventory",true);
+		irisKillClear = irisClear.getBoolean(true);
 		
 		Property ring= config.getBlock("SGRingID",3747,"The BlockID for the SG Ring and Chevron Blocks.");
 		blockSGRingID = ring.getInt();

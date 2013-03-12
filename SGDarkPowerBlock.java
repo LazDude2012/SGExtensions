@@ -15,6 +15,11 @@ public class SGDarkPowerBlock extends BlockContainer
 		this.setCreativeTab(CreativeTabs.tabMisc);
 	}
 
+	public String getTextureFile()
+	{
+		return "/sgextensions/resources/blocks.png";
+	}
+	
 	@Override
 	public TileEntity createNewTileEntity(World var1)
 	{
@@ -24,6 +29,6 @@ public class SGDarkPowerBlock extends BlockContainer
 	@Override
 	public int getBlockTextureFromSide(int i)
 	{
-		return 1;
+		return 3;
 	}
 }
