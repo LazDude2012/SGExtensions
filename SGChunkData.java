@@ -45,11 +45,14 @@ public class SGChunkData
 		Chunk chunk = e.getChunk();
 		//System.out.printf("SGChunkData.onChunkLoad: (%d, %d)\n", chunk.xPosition, chunk.zPosition);
 		SGChunkData data = SGChunkData.forChunk(chunk);
-		data.readFromNBT(e.getData());
-		if (!data.oresGenerated && SGExtensions.addOresToExistingWorlds)
+		if(SGExtensions.addOres)
 		{
-			System.out.printf("SGChunkData.onChunkLoad: Adding ores to chunk (%d, %d)\n", chunk.xPosition, chunk.zPosition);
-			SGExtensions.naquadahOreGenerator.regenerate(chunk);
+			data.readFromNBT(e.getData());
+			if (!data.oresGenerated && SGExtensions.addOresToExistingWorlds)
+			{
+				System.out.printf("SGChunkData.onChunkLoad: Adding ores to chunk (%d, %d)\n", chunk.xPosition, chunk.zPosition);
+				SGExtensions.naquadahOreGenerator.regenerate(chunk);
+			}
 		}
 	}
 

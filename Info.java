@@ -4,9 +4,9 @@ package sgextensions;
 
 public class Info
 {
-	static final String modName = "SG Craft";
+	static final String modName = "SG Craft - Darkcraft Edition";
 	static final String modID = "SGCraft";
 	static final String modPackage = "sg";
-	static final String versionNumber = "0.2.0";
+	static final String versionNumber = "0.3.0";
 	static final String versionBounds = "[0.2,0.3)";
 }

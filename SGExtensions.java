@@ -13,14 +13,16 @@ import cpw.mods.fml.common.registry.VillagerRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.WeightedRandomChestContent;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ChestGenHooks;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.ForgeSubscribe;
 import net.minecraftforge.event.world.ChunkDataEvent;
+import net.minecraftforge.oredict.ShapedOreRecipe;
 
-@Mod(modid = "SGExtensions", name = "SG Extensions", version = "pre1")
+@Mod(modid = "SGExtensions", name = "SG Darkcraft Edition", version = "pre1")
 @NetworkMod(clientSideRequired = true, serverSideRequired = true)
 public class SGExtensions
 {
@@ -42,10 +44,22 @@ public class SGExtensions
 	public static Item naquadah, naquadahIngot, sgCoreCrystal, sgControllerCrystal;
 
 	public static boolean addOresToExistingWorlds;
+	public static boolean addOres;
+	public static boolean irisKillClearInv;
+	
+	public static int irisFrames = 10;
+	
+	public static int bcPowerPerFuel;
+	public static int icPowerPerFuel;
+	public static int fuelAmount;
+	public static int fuelStore = 10;
+	public static int maxOpenTime;
+	
+	public static Item stargateFuel;
 
 	public static NaquadahOreWorldGen naquadahOreGenerator;
 	public static Block diallerBlock;
-	public static Block gatePowererBlock;
+	public static Block sgDarkPowerBlock;
 	public static final int GUIELEMENT_GATE = 1;
 	public static final int GUIELEMENT_DHD = 2;
 
@@ -63,18 +77,25 @@ public class SGExtensions
 		channel = new SGChannel(Info.modID);
 		chunkManager = new BaseTEChunkManager(this);
 		addOresToExistingWorlds = ConfigHandler.regenOres;
+		addOres = ConfigHandler.addOres;
+		bcPowerPerFuel = ConfigHandler.bcPower;
+		icPowerPerFuel = ConfigHandler.icPower;
+		fuelAmount = ConfigHandler.fuelAm;
+		maxOpenTime = ConfigHandler.maxOpen;
+		irisKillClearInv = ConfigHandler.irisKillClear;
+		
 		registerItems();
         registerBlocks();
         registerRandomItems();
         registerTradeHandlers();
         registerWorldGenerators();
 		proxy.ProxyInit();
-		NetworkRegistry.instance().registerGuiHandler(SGExtensions.instance,guiHandler);
+		NetworkRegistry.instance().registerGuiHandler(this,new GuiHandler());
 	}
 	void registerBlocks()
 	{
-		diallerBlock = new DiallerBlock(ConfigHandler.blockDiallerID, 0).setBlockName("diallerblock");
-		gatePowererBlock = new PowererBlock(ConfigHandler.blockPowererID, 0).setBlockName("powererblock");
+		diallerBlock = new SGDarkDiallerBlock(ConfigHandler.blockDiallerID, 0).setBlockName("diallerblock");
+		sgDarkPowerBlock = new SGDarkPowerBlock(ConfigHandler.blockPowererID, 0).setBlockName("powererblock");
 		sgBaseBlock = new SGBaseBlock(ConfigHandler.blockSGBaseID).setBlockName("stargateBase");
 		sgRingBlock = new SGRingBlock(ConfigHandler.blockSGRingID).setBlockName("stargateRing");
 		sgControllerBlock = new SGControllerBlock(ConfigHandler.blockSGControllerID).setBlockName("stargateController");
@@ -87,14 +108,14 @@ public class SGExtensions
 		ItemStack sgChevronBlock = new ItemStack(sgRingBlock, 1, 1);
 
 		GameRegistry.registerBlock(diallerBlock, "blockDialler");
-		GameRegistry.registerTileEntity(TileDialler.class, "tileDialler");
+		GameRegistry.registerTileEntity(SGDarkDiallerTE.class, "tileDialler");
 		GameRegistry.addRecipe(new ItemStack(diallerBlock, 1), "III", "RDR", "III", 'I', Item.ingotIron, 'R', Item.redstone, 'D', sgControllerCrystal);
 		LanguageRegistry.addName(diallerBlock, "Dialling Computer");
 
-		GameRegistry.registerBlock(gatePowererBlock, "blockPowerer");
-		GameRegistry.registerTileEntity(TilePowerer.class, "tilePowerer");
-		GameRegistry.addRecipe(new ItemStack(gatePowererBlock, 1), "IRI", "GDG", "IRI", 'I', Item.ingotIron, 'R', Item.redstone, 'G', Item.ingotGold, 'D', Item.diamond);
-		LanguageRegistry.addName(gatePowererBlock, "Gate Power Interface");
+		GameRegistry.registerBlock(sgDarkPowerBlock, "blockPowerer");
+		GameRegistry.registerTileEntity(SGDarkPowerTE.class, "sgDarkPowerTE");
+		GameRegistry.addRecipe(new ItemStack(sgDarkPowerBlock, 1), "IRI", "GDG", "IRI", 'I', Item.ingotIron, 'R', Item.redstone, 'G', Item.ingotGold, 'D', Item.diamond);
+		LanguageRegistry.addName(sgDarkPowerBlock, "Stargate Power Interface");
 
 		GameRegistry.registerBlock(sgRingBlock, SGRingItem.class,"stargateRing");
 		GameRegistry.registerTileEntity(SGRingTE.class,"SGRingTE");
@@ -122,8 +143,8 @@ public class SGExtensions
 	}
 	void registerItems()
 	{
-        ItemStack blueDye = new ItemStack(Item.dyePowder, 1, 4);
-        ItemStack orangeDye = new ItemStack(Item.dyePowder, 1, 14);
+        String blueDye = new String("dyeBlue");
+        String orangeDye = new String("dyeOrange");
 
         naquadah = new BaseItem(ConfigHandler.itemNaquadahID, "/sgextensions/resources/textures.png").setItemName("naquadah").setIconIndex(0x41);
         naquadahIngot = new BaseItem(ConfigHandler.itemNaqIngotID, "/sgextensions/resources/textures.png").setItemName("naquadahIngot").setIconIndex(0x42);
@@ -139,17 +160,25 @@ public class SGExtensions
 
 		GameRegistry.registerItem(sgCoreCrystal, "crystalSGCore");
         LanguageRegistry.addName(sgCoreCrystal, "Stargate Core Crystal");
-        GameRegistry.addRecipe(new ItemStack(sgCoreCrystal, 1), "bbr", "rdb", "brb", 'b', blueDye, 'r', Item.redstone, 'd', Item.diamond);
+        GameRegistry.addRecipe(new ShapedOreRecipe(sgCoreCrystal, true, new Object[]{
+        		"bbr", "rdb", "brb",
+        		Character.valueOf('b'), blueDye, Character.valueOf('r'), Item.redstone, Character.valueOf('d'), Item.diamond
+        }));
 
 		GameRegistry.registerItem(sgControllerCrystal, "crystalSGControl");
         LanguageRegistry.addName(sgControllerCrystal, "DHD Control Crystal");
-        GameRegistry.addRecipe(new ItemStack(sgControllerCrystal, 1), "roo", "odr", "oor", 'o', orangeDye, 'r', Item.redstone, 'd', Item.diamond );
+        GameRegistry.addRecipe(new ShapedOreRecipe(sgControllerCrystal, true, new Object[]{
+        		"roo", "odr", "oor",
+        		Character.valueOf('o'), orangeDye, Character.valueOf('r'), Item.redstone, Character.valueOf('d'), Item.diamond
+        }));
+        
+        stargateFuel = naquadah;
 	}
 	void registerRandomItems()
 	{
 		String[] categories = {ChestGenHooks.MINESHAFT_CORRIDOR,
 				ChestGenHooks.PYRAMID_DESERT_CHEST, ChestGenHooks.PYRAMID_JUNGLE_CHEST,
-				ChestGenHooks.STRONGHOLD_LIBRARY, ChestGenHooks.VILLAGE_BLACKSMITH};
+				ChestGenHooks.STRONGHOLD_LIBRARY};
 		addRandomChestItem(new ItemStack(sgBaseBlock), 1, 1, 1, categories);
 		addRandomChestItem(new ItemStack(sgRingBlock, 1, 0), 1, 15, 1, categories);
 		addRandomChestItem(new ItemStack(sgRingBlock, 1, 1), 1, 13, 1, categories);
