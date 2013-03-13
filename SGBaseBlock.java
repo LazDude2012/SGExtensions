@@ -18,7 +18,7 @@ import net.minecraft.world.World;
 public class SGBaseBlock extends Base4WayBlock<SGBaseTE>
 {
 
-	static boolean debugMerge = true;
+	static boolean debugMerge = false;
 
 	static final int topAndBottomTexture = 0x00;
 	static final int frontTexture = 0x01;
@@ -109,6 +109,11 @@ public class SGBaseBlock extends Base4WayBlock<SGBaseTE>
     //int getRotation(World world, int x, int y, int z) {
 	//    return world.getBlockMetadata(x, y, z) & rotationMask;
     //}
+	
+	void fixPortalBlocks(World world, int x, int y, int z)
+	{
+		
+	}
 
 	void checkForMerge(World world, int x, int y, int z)
 	{

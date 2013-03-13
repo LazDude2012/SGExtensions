@@ -280,7 +280,10 @@ class SGBaseTERenderer extends TileEntitySpecialRenderer
 	{
 		SGBaseTE test = SGAddressing.findAddressedStargate(te.findHomeAddress());
 		double distance = 0.1;
-		bindTextureByName("/sgextensions/resources/iris.png");
+		if(te.getIrisType() == "Iris")
+		{
+			bindTextureByName("/sgextensions/resources/iris.png");
+		}
 		GL11.glDisable(GL11.GL_CULL_FACE);
 		GL11.glNormal3d(0, 0, 1);
 		int slide = test.irisSlide;

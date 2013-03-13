@@ -1,6 +1,8 @@
 package sgextensions;
 
+import ic2.api.Ic2Recipes;
 import cpw.mods.fml.client.registry.ClientRegistry;
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -41,8 +43,8 @@ public class SGExtensions
 	public static Block sgPortalBlock;
 	public static Block naquadahBlock, naquadahOre;
 
-	public static Item naquadah, naquadahIngot, sgCoreCrystal, sgControllerCrystal;
-	public static Item sgDarkUpgrades;
+	public static Item naquadah, hardNaquadah, naquadahIngot, sgCoreCrystal, sgControllerCrystal;
+	public static Item sgDarkUpgrades, sgHardFuel;
 	
 	public static int safeFuelMod = 4;
 	public static int quickFuelMod = 10;
@@ -56,10 +58,12 @@ public class SGExtensions
 	public static int bcPowerPerFuel;
 	public static int icPowerPerFuel;
 	public static int fuelAmount;
-	public static int fuelStore = 200;
+	public static int fuelStore = 50;
 	public static int maxOpenTime;
 	
-	public static Item stargateFuel;
+	public static boolean gateHardMode;
+	public static boolean fuelHardMode;
+	public static ItemStack stargateFuel;
 
 	public static NaquadahOreWorldGen naquadahOreGenerator;
 	public static Block diallerBlock;
@@ -87,14 +91,116 @@ public class SGExtensions
 		fuelAmount = ConfigHandler.fuelAm;
 		maxOpenTime = ConfigHandler.maxOpen;
 		irisKillClearInv = ConfigHandler.irisKillClear;
+		fuelHardMode = ConfigHandler.fuelHardMode;
+		gateHardMode = ConfigHandler.gateHardMode;
 		
 		registerItems();
         registerBlocks();
+        registerDarkRecipes();
         registerRandomItems();
         registerTradeHandlers();
         registerWorldGenerators();
 		proxy.ProxyInit();
 		NetworkRegistry.instance().registerGuiHandler(this,new GuiHandler());
+	}
+	
+	SGDarkMultiItem registerMI(int ID,String[] sN, int[] icons,String[] info,int StackSize)
+	{
+		SGDarkMultiItem Temp = new SGDarkMultiItem(ID);
+		Temp.setSubNames(sN);
+		Temp.setSubIcons(icons);
+		Temp.setSubInfo(info);
+		Temp.setMaxStackSize(StackSize);
+		return Temp;
+	}
+	
+	void registerDarkRecipes()
+	{
+		ShapedOreRecipe TempRec;
+		ItemStack darkUpgradeIris = new ItemStack(sgDarkUpgrades,1,2);
+		ItemStack darkUpgradeFast = new ItemStack(sgDarkUpgrades,1,0);
+		ItemStack darkUpgradeSafe = new ItemStack(sgDarkUpgrades,1,1);
+		ItemStack darkHardUnstable = new ItemStack(sgHardFuel,1,0);
+		ItemStack darkHardStable = new ItemStack(sgHardFuel,1,1);
+		ItemStack darkHardDust = new ItemStack(sgHardFuel,1,2);
+		ItemStack darkHardStableDust = new ItemStack(sgHardFuel,1,3);
+		
+		
+		TempRec = new ShapedOreRecipe(darkUpgradeIris,true,new Object[]{
+			"III","IDI","III",
+			Character.valueOf('I'),"ingotIron",Character.valueOf('D'),sgControllerCrystal});
+		GameRegistry.addRecipe(TempRec);
+		
+		TempRec = new ShapedOreRecipe(darkUpgradeFast,true,new Object[]{
+				"DID","IDI","DID",
+				Character.valueOf('I'),darkHardStable,Character.valueOf('D'),sgCoreCrystal});
+		GameRegistry.addRecipe(TempRec);
+		
+		TempRec = new ShapedOreRecipe(darkUpgradeSafe,true,new Object[]{
+				"XIX","TDT","XIX",
+				Character.valueOf('X'),darkHardStable,Character.valueOf('I'),darkUpgradeFast,
+				Character.valueOf('T'),darkUpgradeIris,Character.valueOf('D'),sgCoreCrystal});
+		GameRegistry.addRecipe(TempRec);
+		
+		TempRec = new ShapedOreRecipe(darkUpgradeSafe,true,new Object[]{
+				"XIX","TDT","XIX",
+				Character.valueOf('X'),darkHardStable,Character.valueOf('T'),darkUpgradeFast,
+				Character.valueOf('I'),darkUpgradeIris,Character.valueOf('D'),sgCoreCrystal});
+		GameRegistry.addRecipe(TempRec);
+		
+		TempRec = new ShapedOreRecipe(darkHardUnstable,true,new Object[]{
+				"DND","NNN","DND",
+				Character.valueOf('D'),Item.diamond,Character.valueOf('N'),naquadahIngot});
+		GameRegistry.addRecipe(TempRec);
+		
+		TempRec = new ShapedOreRecipe(darkHardStable,true,new Object[]{
+				"DGD","DND","DGD",
+				Character.valueOf('D'),Item.diamond,Character.valueOf('N'),darkHardUnstable,Character.valueOf('G'),Block.glass});
+		GameRegistry.addRecipe(TempRec);
+		
+		if(Loader.isModLoaded("ic2"))
+		{
+			Ic2Recipes.addMaceratorRecipe(new ItemStack(naquadah,1,0), new ItemStack(sgHardFuel,2,2));
+			TempRec = new ShapedOreRecipe(darkHardStableDust,true,new Object[]{
+					"DGD","DND","DGD",
+					Character.valueOf('D'),"dustDiamond",Character.valueOf('N'),darkHardDust,Character.valueOf('G'),Block.sand});
+			GameRegistry.addRecipe(TempRec);
+			Ic2Recipes.addCompressorRecipe(darkHardStableDust,darkHardStable);
+		}
+		
+		if(Loader.isModLoaded("ComputerCraft"))
+		{
+			TempRec = new ShapedOreRecipe(diallerBlock,true,new Object[]{
+					"SRS","RCR","SRS",
+					Character.valueOf('S'),Block.stone,Character.valueOf('R'),Item.redstone,Character.valueOf('C'),sgControllerCrystal});
+			GameRegistry.addRecipe(TempRec);
+		}
+		
+		TempRec = new ShapedOreRecipe(sgDarkPowerBlock,true,new Object[]{
+				"GNG","NDN","GNG",
+				Character.valueOf('G'),"ingotGold",Character.valueOf('N'),naquadahIngot,Character.valueOf('D'),Item.diamond
+		});
+	}
+	
+	void registerMultiItems()
+	{
+		//UPGRADES
+		String[] a = new String[]  {"Stargate Upgrade - Fast Dial", "Stargate Upgrade - Safe Dial", "Stargate Upgrade - Iris"};
+		String [] b =  new String[] 
+		{	"Allows instant dialling#at 10 * energy cost",
+			"Allows dialling with no kawoosh#at 4 * energy cost",
+			"Allows computer controlled iris"};
+		int[] c = new int[]{71,72,70};
+		SGDarkMultiItem TempUpgrades = registerMI(ConfigHandler.itemUpgradesID,a,c,b,1);
+		GameRegistry.registerItem((Item) TempUpgrades, "sgDarkUpgrades");
+		sgDarkUpgrades = TempUpgrades;
+		
+		a = new String[] {"Unstable Naquadriah","Naquadriah","Naquadah Dust","Naquadriah Dust"};
+		b = new String[] {};
+		c = new int[]{80,81,82,83};
+		SGDarkMultiItem TempHardFuel = registerMI(ConfigHandler.itemHardID,a,c,b,64);
+		GameRegistry.registerItem((Item) TempHardFuel, "sgDarkHardFuel");
+		sgHardFuel = TempHardFuel;
 	}
 	void registerBlocks()
 	{
@@ -154,7 +260,6 @@ public class SGExtensions
         naquadahIngot = new BaseItem(ConfigHandler.itemNaqIngotID, "/sgextensions/resources/textures.png").setItemName("naquadahIngot").setIconIndex(0x42);
         sgCoreCrystal = new BaseItem(ConfigHandler.itemCrystalCoreID,"/sgextensions/resources/textures.png").setItemName("sgCrystalCore").setIconIndex(0x44);
         sgControllerCrystal = new BaseItem(ConfigHandler.itemCrystalControlID,"/sgextensions/resources/textures.png").setItemName("sgCrystalControl").setIconIndex(0x45);
-        sgDarkUpgrades = new SGDarkUpgradesItem(ConfigHandler.itemUpgradesID);
         
 		GameRegistry.registerItem(naquadah,"itemNaquadah");
         LanguageRegistry.addName(naquadah,"Naquadah");
@@ -177,7 +282,17 @@ public class SGExtensions
         		Character.valueOf('o'), orangeDye, Character.valueOf('r'), Item.redstone, Character.valueOf('d'), Item.diamond
         }));
         
-        stargateFuel = naquadah;
+        registerMultiItems();
+        if(fuelHardMode)
+        {
+        	ItemStack tv = new ItemStack(sgHardFuel);
+        	tv.setItemDamage(1);
+        	stargateFuel = tv;
+        }
+        else
+        {
+        	stargateFuel = new ItemStack(naquadah);
+        }
 	}
 	void registerRandomItems()
 	{

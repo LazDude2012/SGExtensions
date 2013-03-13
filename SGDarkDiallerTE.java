@@ -169,7 +169,7 @@ public class SGDarkDiallerTE extends TileEntity implements IPeripheral
 			retMap.put(2, ownedGate.numEngagedChevrons);
 			retMap.put(3, outState);
 			retMap.put(4, ownedGate.fuelBuffer);
-			retMap.put(5, ownedGate.irisType);
+			retMap.put(5, ownedGate.getIrisType());
 			retMap.put(6, ownedGate.irisState());
 			
 		}

@@ -60,7 +60,7 @@ public class SGBaseContainer extends BaseContainer
 			int y = fuelSlotsY + row * 18;
 			//System.out.printf("SGBaseContainer: adding fuel slot %s at (%s, %s)\n", i, x, y);
 			Slot TSlot = new SGDarkUpgradeSlot(te, tx, x, y);
-			((SGDarkUpgradeSlot)TSlot).setAllowedItemArray(new ItemStack[] {new ItemStack(SGExtensions.stargateFuel)});
+			((SGDarkUpgradeSlot)TSlot).setAllowedItemArray(new ItemStack[] {SGExtensions.stargateFuel});
 			addSlotToContainer(TSlot);
 			tx++;
 		}
@@ -76,7 +76,7 @@ public class SGBaseContainer extends BaseContainer
 			int x = upgradeSlotsX + col * 18;
 			int y = upgradeSlotsY + row * 18;
 			Slot TSlot = new SGDarkUpgradeSlot(te, tx, x, y);
-			ItemStack TI = ((SGDarkUpgradesItem) (SGExtensions.sgDarkUpgrades)).getUpgrade(upgradeList[i]);
+			ItemStack TI = ((SGDarkMultiItem) (SGExtensions.sgDarkUpgrades)).getUpgrade(upgradeList[i]);
 			((SGDarkUpgradeSlot)TSlot).setAllowedItemArray(new ItemStack[] {TI});
 			addSlotToContainer(TSlot);
 			tx++;

@@ -123,10 +123,32 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			return null;
 	}
 	
+	public String getIrisType()
+	{
+		ItemStack is = getStackInSlot(4);
+		if(is != null)
+		{
+			if(is.getItem() instanceof SGDarkMultiItem)
+			{
+				SGDarkMultiItem mI = (SGDarkMultiItem)is.getItem();
+				if(mI.isUpgradeType("Stargate Upgrade - Iris",is))
+				{
+					return "Iris";
+				}
+				else if(mI.isUpgradeType("Stargate Upgrade - Shield",is))
+				{
+					return "Shield";
+				}
+			}
+		}
+		irisVarState = 0;
+		return null;
+	}
+	
 	public String irisState()
 	{
 		//System.out.printf("SGBaseTE Iris State - %d\n", irisVarState);
-		if(irisType == null)
+		if(getIrisType() == null)
 		{
 			return "Error - No Iris";
 		}
@@ -146,31 +168,55 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	
 	public String openIris()
 	{
-		if(irisType != null)
+		String IT = getIrisType();
+		if(IT != null)
 		{
 			if(irisVarState == 2)
 			{
-				irisVarState = 3;
-				irisSlide = 0;
-				irisTimer = irisTimerVal;
+				if(IT == "Iris")
+				{
+					irisVarState = 3;
+					irisSlide = 0;
+					irisTimer = irisTimerVal;
+				}
+				else if(IT == "Shield")
+				{
+					irisVarState = 0;
+				}
+				return "Iris opened";
 			}
-			return "Iris opened";
+			else if(irisVarState == 1 || irisVarState == 3)
+			{
+				return "Error - Iris in motion";
+			}
 		}
 		return "Error - No iris";
 	}
 	
 	public String closeIris()
 	{
-		System.out.printf("Stargate - Iris closing\n");
-		if(irisType != null)
+		String IT = getIrisType();
+		if(IT != null)
 		{
 			if(irisVarState == 0)
 			{
-				irisVarState = 1;
-				irisSlide = SGExtensions.irisFrames - 1;
-				irisTimer = irisTimerVal;
+				if(IT == "Iris")
+				{
+					irisVarState = 1;
+					irisSlide = SGExtensions.irisFrames - 1;
+					irisTimer = irisTimerVal;
+				}
+				else if(IT == "Shield")
+				{
+					irisVarState = 2;
+				}
+				return "Iris closed";
 			}
-			return "Iris closed";
+			else if(irisVarState == 1 || irisVarState == 3)
+			{
+				return "Error - Iris in motion";
+			}
+			
 		}
 		return "Error - No iris";
 	}
@@ -501,7 +547,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 				safeDial = false;
 			}
 		}
-		quickDial = quickDial || shouldQuickDial();
+		quickDial = (quickDial || shouldQuickDial());
 		if(quickDial)
 		{
 			if(reloadFuel(fuelToOpen*SGExtensions.quickFuelMod))
@@ -610,13 +656,14 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		{
 			//performPendingTeleportations();
 			fuelUsage();
+			useFuel();
 			
 			if(irisState() == "Iris - Opening" || irisState() == "Iris - Closing")
 			{
 				irisTimer--;
 				if(irisTimer <= 0)
 				{
-					System.out.printf("Iris Slide: (%d)\n", irisSlide);
+					//System.out.printf("Iris Slide: (%d)\n", irisSlide);
 					irisTimer = irisTimerVal;
 					if(irisState() == "Iris - Opening")
 					{
@@ -704,6 +751,39 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		}
 		return fuelBuffer >= amount;
 	}
+	
+	public boolean useFuel()
+	{
+		//System.out.printf("SGBaseTE: Use fuel attempt\n");
+		int n = fuelSlots;
+		if((fuelBuffer + fuelPerItem) <= maxFuelBuffer)
+		{
+			for (int i = n - 1; i >= 0; i--)
+			{
+				//System.out.printf("SGBaseTE: Checking slot %d\n", i);
+				ItemStack stack = getStackInSlot(i);
+				if (stack != null && stack.getItem() == SGExtensions.stargateFuel.getItem() && stack.getItemDamage() == SGExtensions.stargateFuel.getItemDamage() && stack.stackSize > 0)
+				{
+					//System.out.printf("SGBaseTE: Valid item in %d\n", i);
+					fuelBuffer += fuelPerItem;
+					decrStackSize(i, 1);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public void useAllFuel()
+	{
+		int n = fuelSlots;
+		boolean isDone;
+		do
+		{
+			isDone = useFuel();
+		}
+		while(isDone == true);
+	}
 
 	boolean useFuelItem()
 	{
@@ -711,7 +791,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		for (int i = n - 1; i >= 0; i--)
 		{
 			ItemStack stack = getStackInSlot(i);
-			if (stack != null && stack.getItem() == SGExtensions.stargateFuel && stack.stackSize > 0)
+			if (stack != null && stack == SGExtensions.stargateFuel && stack.stackSize > 0)
 			{
 				decrStackSize(i, 1);
 				return true;
@@ -829,19 +909,29 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		}
 		else
 		{
-			
+			ItemStack X = getStackInSlot(5);
+			if(X != null)
+			{
+				if (((SGDarkMultiItem)(X.getItem())).isUpgradeType("Stargate Upgrade - Safe Dial",X.getItemDamage()))
+				{
+					return true;
+				}
+			}
 		}
 		return false;
 	}
 	
 	boolean shouldQuickDial()
 	{
-		ItemStack X = getStackInSlot(6);
-		if (((SGDarkUpgradesItem)(X.getItem())).isUpgradeType("Stargate Upgrade - Safe Dial",X.getItemDamage()))
+		for(int i=0;i<upgradeSlots;i++)
 		{
-			if(reloadFuel(SGExtensions.fuelAmount * 10))
+			ItemStack X = getStackInSlot(4+i);
+			if(X != null)
 			{
-				return true;
+				if (((SGDarkMultiItem)(X.getItem())).isUpgradeType("Stargate Upgrade - Fast Dial",X.getItemDamage()))
+				{
+					return true;
+				}
 			}
 		}
 		return false;
@@ -923,7 +1013,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 				}
 			}
 		}
-		else if(isInitiator == false)
+		else if(state == SGState.Connected && isInitiator == false)
 		{
 			if(SGExtensions.irisKillClearInv)
 			{
