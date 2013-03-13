@@ -25,6 +25,7 @@ public class ConfigHandler
 	public static int itemNaqIngotID;
 	public static int itemCrystalCoreID;
 	public static int itemCrystalControlID;
+	public static int itemUpgradesID;
 
 	public static void loadConfig(FMLPreInitializationEvent e)
 	{
@@ -87,6 +88,9 @@ public class ConfigHandler
 
 		Property crystalControl = config.getItem("SGCrystalControlID",5504,"The ItemID for the Stargate Controller Crystal.");
 		itemCrystalControlID = crystalControl.getInt();
+		
+		Property upgradesID = config.getItem("SGUpdatedsID",5505,"The ItemID for the Stargate Upgrades.");
+		itemUpgradesID = upgradesID.getInt();
 		
 		
 

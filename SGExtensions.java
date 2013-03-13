@@ -42,6 +42,10 @@ public class SGExtensions
 	public static Block naquadahBlock, naquadahOre;
 
 	public static Item naquadah, naquadahIngot, sgCoreCrystal, sgControllerCrystal;
+	public static Item sgDarkUpgrades;
+	
+	public static int safeFuelMod = 4;
+	public static int quickFuelMod = 10;
 
 	public static boolean addOresToExistingWorlds;
 	public static boolean addOres;
@@ -52,7 +56,7 @@ public class SGExtensions
 	public static int bcPowerPerFuel;
 	public static int icPowerPerFuel;
 	public static int fuelAmount;
-	public static int fuelStore = 10;
+	public static int fuelStore = 200;
 	public static int maxOpenTime;
 	
 	public static Item stargateFuel;
@@ -150,7 +154,8 @@ public class SGExtensions
         naquadahIngot = new BaseItem(ConfigHandler.itemNaqIngotID, "/sgextensions/resources/textures.png").setItemName("naquadahIngot").setIconIndex(0x42);
         sgCoreCrystal = new BaseItem(ConfigHandler.itemCrystalCoreID,"/sgextensions/resources/textures.png").setItemName("sgCrystalCore").setIconIndex(0x44);
         sgControllerCrystal = new BaseItem(ConfigHandler.itemCrystalControlID,"/sgextensions/resources/textures.png").setItemName("sgCrystalControl").setIconIndex(0x45);
-
+        sgDarkUpgrades = new SGDarkUpgradesItem(ConfigHandler.itemUpgradesID);
+        
 		GameRegistry.registerItem(naquadah,"itemNaquadah");
         LanguageRegistry.addName(naquadah,"Naquadah");
 

@@ -23,6 +23,7 @@ public class SGBaseContainer extends BaseContainer
 	static final int fuelSlotsY = 84;
 	static final int playerSlotsX = 48;
 	static final int playerSlotsY = 124;
+	static final String[] upgradeList = {"Stargate Upgrade - Iris","Stargate Upgrade - Safe Dial","Stargate Upgrade - Fast Dial"};
 	
 	private int tx = 0;
 
@@ -74,8 +75,10 @@ public class SGBaseContainer extends BaseContainer
 			int col = i % numUpdradeSlotColumns;
 			int x = upgradeSlotsX + col * 18;
 			int y = upgradeSlotsY + row * 18;
-			System.out.printf("SGBaseContainer: adding upgrade slot %s at (%s, %s)\n", i, x, y);
-			addSlotToContainer(new Slot(te, tx, x, y));
+			Slot TSlot = new SGDarkUpgradeSlot(te, tx, x, y);
+			ItemStack TI = ((SGDarkUpgradesItem) (SGExtensions.sgDarkUpgrades)).getUpgrade(upgradeList[i]);
+			((SGDarkUpgradeSlot)TSlot).setAllowedItemArray(new ItemStack[] {TI});
+			addSlotToContainer(TSlot);
 			tx++;
 		}
 	}

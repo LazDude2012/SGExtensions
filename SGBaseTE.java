@@ -65,6 +65,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	final static int fuelPerItem = SGExtensions.fuelAmount;
 	final static int maxFuelBuffer = SGExtensions.fuelStore * fuelPerItem;
 	final static int fuelToOpen = fuelPerItem;
+	private int modifiedFuelToOpen;
 	final static int irisTimerVal = 2;
 
 	static Random random = new Random();
@@ -233,6 +234,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		linkedY = nbt.getInteger("linkedY");
 		linkedZ = nbt.getInteger("linkedZ");
 		irisVarState = nbt.getInteger("irisState");
+		irisSlide = nbt.getInteger("irisSlide");
 		if (nbt.hasKey("connectedLocation"))
 			connectedLocation = new SGLocation(nbt.getCompoundTag("connectedLocation"));
 		isInitiator = nbt.getBoolean("isInitiator");
@@ -250,6 +252,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		nbt.setInteger("state", state.ordinal());
 		nbt.setDouble("targetRingAngle", targetRingAngle);
 		nbt.setInteger("irisState", irisVarState);
+		nbt.setInteger("irisSlide", irisSlide);
 		nbt.setInteger("numEngagedChevrons", numEngagedChevrons);
 		//nbt.setString("homeAddress", homeAddress);
 		nbt.setString("dialledAddress", dialledAddress);
@@ -485,8 +488,37 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			diallingFailure(player, "Stargate has insufficient fuel");
 			return "Error - Stargate has insufficient fuel";
 		}
+		modifiedFuelToOpen = fuelToOpen;
 		safeDial = safeDial || shouldSafeDial();
+		if(safeDial)
+		{
+			if(reloadFuel(fuelToOpen*SGExtensions.safeFuelMod))
+			{
+				modifiedFuelToOpen = modifiedFuelToOpen * SGExtensions.safeFuelMod;
+			}
+			else
+			{
+				safeDial = false;
+			}
+		}
 		quickDial = quickDial || shouldQuickDial();
+		if(quickDial)
+		{
+			if(reloadFuel(fuelToOpen*SGExtensions.quickFuelMod))
+			{
+				modifiedFuelToOpen = modifiedFuelToOpen * SGExtensions.quickFuelMod;
+			}
+			else
+			{
+				quickDial = false;
+			}
+		}
+		
+		if (!reloadFuel(modifiedFuelToOpen))
+		{
+			diallingFailure(player, "Stargate has insufficient fuel");
+			return "Error - Stargate has insufficient fuel";
+		}
 		dte.safeDial = this.safeDial || dte.shouldSafeDial();
 		dte.quickDial = this.quickDial;
 		startDiallingStargate(address, dte, true);
@@ -675,11 +707,11 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 	boolean useFuelItem()
 	{
-		int n = getSizeInventory();
+		int n = fuelSlots;
 		for (int i = n - 1; i >= 0; i--)
 		{
 			ItemStack stack = getStackInSlot(i);
-			if (stack != null && stack.getItem() == SGExtensions.naquadah && stack.stackSize > 0)
+			if (stack != null && stack.getItem() == SGExtensions.stargateFuel && stack.stackSize > 0)
 			{
 				decrStackSize(i, 1);
 				return true;
@@ -795,18 +827,30 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		{
 			return true;
 		}
+		else
+		{
+			
+		}
 		return false;
 	}
 	
 	boolean shouldQuickDial()
 	{
+		ItemStack X = getStackInSlot(6);
+		if (((SGDarkUpgradesItem)(X.getItem())).isUpgradeType("Stargate Upgrade - Safe Dial",X.getItemDamage()))
+		{
+			if(reloadFuel(SGExtensions.fuelAmount * 10))
+			{
+				return true;
+			}
+		}
 		return false;
 	}
 
 	void finishDiallingAddress()
 	{
 		//System.out.printf("SGBaseTE: Connecting to '%s'\n", dialledAddress);
-		if (!isInitiator || useFuel(fuelToOpen))
+		if (!isInitiator || useFuel(modifiedFuelToOpen))
 		{
 			//sendClientEvent(SGEvent.Connect, 0);
 			if(safeDial == true)
