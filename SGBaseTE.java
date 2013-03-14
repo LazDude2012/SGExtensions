@@ -75,7 +75,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 	public boolean isMerged;
 	
-	public int irisVarState;
+	public SGIrisState irisVarState;
 	public String irisType = "iris";
 	public int irisSlide;
 	private int irisTimer;
@@ -141,8 +141,30 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 				}
 			}
 		}
-		irisVarState = 0;
+		IrisStateFromNum(0);
 		return null;
+	}
+	
+	public int IrisStateToNum()
+	{
+		switch(irisVarState)
+		{
+			case Open:return 0;
+			case Closing:return 1;
+			case Closed:return 2;
+			case Opening:return 3;
+			default:
+				return 0;
+		}
+	}
+	
+	public void IrisStateFromNum(int num)
+	{
+		if(num == 0)irisVarState=SGIrisState.Open;
+		if(num == 1)irisVarState=SGIrisState.Closing;
+		if(num == 2)irisVarState=SGIrisState.Closed;
+		if(num == 3)irisVarState=SGIrisState.Opening;
+		markBlockForUpdate();
 	}
 	
 	public String irisState()
@@ -154,13 +176,13 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		}
 		else
 		{
-			if(irisVarState == 0)
+			if(IrisStateToNum() == 0)
 				return "Iris - Open";
-			else if(irisVarState == 1)
+			else if(IrisStateToNum() == 1)
 				return "Iris - Closing";
-			else if(irisVarState == 2)
+			else if(IrisStateToNum() == 2)
 				return "Iris - Closed";
-			else if(irisVarState == 3)
+			else if(IrisStateToNum() == 3)
 				return "Iris - Opening";
 		}
 		return "Error - Unknown state";
@@ -171,21 +193,21 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		String IT = getIrisType();
 		if(IT != null)
 		{
-			if(irisVarState == 2)
+			if(IrisStateToNum() == 2)
 			{
 				if(IT == "Iris")
 				{
-					irisVarState = 3;
+					IrisStateFromNum(3);
 					irisSlide = 0;
 					irisTimer = irisTimerVal;
 				}
 				else if(IT == "Shield")
 				{
-					irisVarState = 0;
+					IrisStateFromNum(0);
 				}
 				return "Iris opened";
 			}
-			else if(irisVarState == 1 || irisVarState == 3)
+			else if(IrisStateToNum() == 1 || IrisStateToNum() == 3)
 			{
 				return "Error - Iris in motion";
 			}
@@ -198,21 +220,21 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		String IT = getIrisType();
 		if(IT != null)
 		{
-			if(irisVarState == 0)
+			if(IrisStateToNum() == 0)
 			{
 				if(IT == "Iris")
 				{
-					irisVarState = 1;
+					IrisStateFromNum(1);
 					irisSlide = SGExtensions.irisFrames - 1;
 					irisTimer = irisTimerVal;
 				}
 				else if(IT == "Shield")
 				{
-					irisVarState = 2;
+					IrisStateFromNum(2);
 				}
 				return "Iris closed";
 			}
-			else if(irisVarState == 1 || irisVarState == 3)
+			else if(IrisStateToNum() == 1 || IrisStateToNum() == 3)
 			{
 				return "Error - Iris in motion";
 			}
@@ -223,7 +245,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	
 	public String toggleIris()
 	{
-		if(irisType != null)
+		String IT = getIrisType();
+		if(IT != null)
 		{
 			if(irisState() == "Iris - Open")
 			{
@@ -279,7 +302,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		linkedX = nbt.getInteger("linkedX");
 		linkedY = nbt.getInteger("linkedY");
 		linkedZ = nbt.getInteger("linkedZ");
-		irisVarState = nbt.getInteger("irisState");
+		irisVarState = SGIrisState.valueOf(nbt.getInteger("irisState"));
 		irisSlide = nbt.getInteger("irisSlide");
 		if (nbt.hasKey("connectedLocation"))
 			connectedLocation = new SGLocation(nbt.getCompoundTag("connectedLocation"));
@@ -297,7 +320,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		nbt.setBoolean("isMerged", isMerged);
 		nbt.setInteger("state", state.ordinal());
 		nbt.setDouble("targetRingAngle", targetRingAngle);
-		nbt.setInteger("irisState", irisVarState);
+		nbt.setInteger("irisState", irisVarState.ordinal());
 		nbt.setInteger("irisSlide", irisSlide);
 		nbt.setInteger("numEngagedChevrons", numEngagedChevrons);
 		//nbt.setString("homeAddress", homeAddress);
@@ -663,14 +686,14 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 				irisTimer--;
 				if(irisTimer <= 0)
 				{
-					//System.out.printf("Iris Slide: (%d)\n", irisSlide);
+					System.out.printf("Iris Slide: (%d)\n", irisSlide);
 					irisTimer = irisTimerVal;
 					if(irisState() == "Iris - Opening")
 					{
 						irisSlide++;
 						if(irisSlide >= SGExtensions.irisFrames)
 						{
-							irisVarState = 0;
+							IrisStateFromNum(0);
 						}
 					}
 					else
@@ -678,10 +701,12 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 						irisSlide --;
 						if(irisSlide == 0)
 						{
-							irisVarState = 2;
+							IrisStateFromNum(2);
 						}
 					}
+					markBlockForUpdate();
 				}
+				
 			}
 			
 			if (timeout > 0)
@@ -767,6 +792,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 					//System.out.printf("SGBaseTE: Valid item in %d\n", i);
 					fuelBuffer += fuelPerItem;
 					decrStackSize(i, 1);
+					markBlockForUpdate();
 					return true;
 				}
 			}
@@ -806,6 +832,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		{
 			fuelBuffer = amount;
 			onInventoryChanged();
+			markBlockForUpdate();
 			//System.out.printf("SGBaseTE: Fuel level now %d\n", fuelBuffer);
 		}
 	}
@@ -1197,37 +1224,6 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		}
 	}
 
-//	@Override
-//	public void receiveClientEvent(int id, int data) {
-//		if (worldObj.isRemote) {
-//			SGEvent type = SGEvent.valueOf(id);
-//			System.out.printf("SGBaseTE.receiveClientEvent: %s, %d in %s\n", type, data, worldObj);
-//			switch (type) {
-//				case StartDialling:
-//					targetRingAngle = data / 1000.0;
-//					enterState(SGState.Dialling, diallingTime);
-//					break;
-//				case FinishDialling:
-//					numEngagedChevrons = data;
-//					setRingAngle(targetRingAngle);
-//					enterState(SGState.Idle, 0);
-//					break;
-//				case Connect:
-//					initiateOpeningTransient();
-//					enterState(SGState.Connected, 0);
-//					break;
-//				case StartDisconnecting:
-//					numEngagedChevrons = 0;
-//					initiateClosingTransient();
-//					enterState(SGState.Disconnecting, 0);
-//					break;
-//				case FinishDisconnecting:
-//					numEngagedChevrons = 0;
-//					enterState(SGState.Idle, 0);
-//					break;
-//			}
-//		}
-//	}
 
 	void clientUpdate()
 	{
@@ -1377,25 +1373,11 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 }
 
-//------------------------------------------------------------------------------------------------
+////////////////////////////////////////////////
+///////////////////TELEPORTERS AND DAMAGE/////
+//////////////////////////////////////
 
-//enum SGEvent {
-//	Unknown, StartDialling, FinishDialling, Connect, StartDisconnecting, FinishDisconnecting;
-//	
-//	static SGEvent[] VALUES = values();
-//	
-//	public static SGEvent valueOf(int i) {
-//		try {
-//			return VALUES[i];
-//		}
-//		catch (IndexOutOfBoundsException e) {
-//			return Unknown;
-//		}
-//	}
-//
-//}
 
-//------------------------------------------------------------------------------------------------
 
 class DummyTeleporter extends Teleporter
 {

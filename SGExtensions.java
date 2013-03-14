@@ -158,7 +158,7 @@ public class SGExtensions
 				Character.valueOf('D'),Item.diamond,Character.valueOf('N'),darkHardUnstable,Character.valueOf('G'),Block.glass});
 		GameRegistry.addRecipe(TempRec);
 		
-		if(Loader.isModLoaded("ic2"))
+		if(Loader.isModLoaded("IC2"))
 		{
 			Ic2Recipes.addMaceratorRecipe(new ItemStack(naquadah,1,0), new ItemStack(sgHardFuel,2,2));
 			TempRec = new ShapedOreRecipe(darkHardStableDust,true,new Object[]{

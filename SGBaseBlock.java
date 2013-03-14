@@ -78,6 +78,7 @@ public class SGBaseBlock extends Base4WayBlock<SGBaseTE>
 	{
 		String Side = world.isRemote ? "Client" : "Server";
 		SGBaseTE te = getTileEntity(world, x, y, z);
+		te.markBlockForUpdate();
 		//System.out.printf("SGBaseBlock.onBlockActivated: %s: Tile entity = %s\n", Side, te);
 		if (te != null)
 		{

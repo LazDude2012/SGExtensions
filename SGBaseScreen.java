@@ -130,7 +130,6 @@ public class SGBaseScreen extends SGScreen
 		if(drawFuel == 0)
 		{
 			drawFuel = 10;
-			te = SGAddressing.findAddressedStargate(te.findHomeAddress());
 			fuelLevel = ITS(te.fuelBuffer,1);
 			fuelMax = ITS(te.maxFuelBuffer,1);
 		}
