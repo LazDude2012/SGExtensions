@@ -65,6 +65,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	final static int fuelPerItem = SGExtensions.fuelAmount;
 	final static int maxFuelBuffer = SGExtensions.fuelStore * fuelPerItem;
 	final static int fuelToOpen = fuelPerItem;
+	private int modifiedFuelToOpen;
 	final static int irisTimerVal = 2;
 
 	static Random random = new Random();
@@ -74,7 +75,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 	public boolean isMerged;
 	
-	public int irisVarState;
+	public SGIrisState irisVarState;
 	public String irisType = "iris";
 	public int irisSlide;
 	private int irisTimer;
@@ -122,22 +123,66 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			return null;
 	}
 	
+	public String getIrisType()
+	{
+		ItemStack is = getStackInSlot(4);
+		if(is != null)
+		{
+			if(is.getItem() instanceof SGDarkMultiItem)
+			{
+				SGDarkMultiItem mI = (SGDarkMultiItem)is.getItem();
+				if(mI.isUpgradeType("Stargate Upgrade - Iris",is))
+				{
+					return "Iris";
+				}
+				else if(mI.isUpgradeType("Stargate Upgrade - Shield",is))
+				{
+					return "Shield";
+				}
+			}
+		}
+		IrisStateFromNum(0);
+		return null;
+	}
+	
+	public int IrisStateToNum()
+	{
+		switch(irisVarState)
+		{
+			case Open:return 0;
+			case Closing:return 1;
+			case Closed:return 2;
+			case Opening:return 3;
+			default:
+				return 0;
+		}
+	}
+	
+	public void IrisStateFromNum(int num)
+	{
+		if(num == 0)irisVarState=SGIrisState.Open;
+		if(num == 1)irisVarState=SGIrisState.Closing;
+		if(num == 2)irisVarState=SGIrisState.Closed;
+		if(num == 3)irisVarState=SGIrisState.Opening;
+		markBlockForUpdate();
+	}
+	
 	public String irisState()
 	{
 		//System.out.printf("SGBaseTE Iris State - %d\n", irisVarState);
-		if(irisType == null)
+		if(getIrisType() == null)
 		{
 			return "Error - No Iris";
 		}
 		else
 		{
-			if(irisVarState == 0)
+			if(IrisStateToNum() == 0)
 				return "Iris - Open";
-			else if(irisVarState == 1)
+			else if(IrisStateToNum() == 1)
 				return "Iris - Closing";
-			else if(irisVarState == 2)
+			else if(IrisStateToNum() == 2)
 				return "Iris - Closed";
-			else if(irisVarState == 3)
+			else if(IrisStateToNum() == 3)
 				return "Iris - Opening";
 		}
 		return "Error - Unknown state";
@@ -145,38 +190,63 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 	
 	public String openIris()
 	{
-		if(irisType != null)
+		String IT = getIrisType();
+		if(IT != null)
 		{
-			if(irisVarState == 2)
+			if(IrisStateToNum() == 2)
 			{
-				irisVarState = 3;
-				irisSlide = 0;
-				irisTimer = irisTimerVal;
+				if(IT == "Iris")
+				{
+					IrisStateFromNum(3);
+					irisSlide = 0;
+					irisTimer = irisTimerVal;
+				}
+				else if(IT == "Shield")
+				{
+					IrisStateFromNum(0);
+				}
+				return "Iris opened";
 			}
-			return "Iris opened";
+			else if(IrisStateToNum() == 1 || IrisStateToNum() == 3)
+			{
+				return "Error - Iris in motion";
+			}
 		}
 		return "Error - No iris";
 	}
 	
 	public String closeIris()
 	{
-		System.out.printf("Stargate - Iris closing\n");
-		if(irisType != null)
+		String IT = getIrisType();
+		if(IT != null)
 		{
-			if(irisVarState == 0)
+			if(IrisStateToNum() == 0)
 			{
-				irisVarState = 1;
-				irisSlide = SGExtensions.irisFrames - 1;
-				irisTimer = irisTimerVal;
+				if(IT == "Iris")
+				{
+					IrisStateFromNum(1);
+					irisSlide = SGExtensions.irisFrames - 1;
+					irisTimer = irisTimerVal;
+				}
+				else if(IT == "Shield")
+				{
+					IrisStateFromNum(2);
+				}
+				return "Iris closed";
 			}
-			return "Iris closed";
+			else if(IrisStateToNum() == 1 || IrisStateToNum() == 3)
+			{
+				return "Error - Iris in motion";
+			}
+			
 		}
 		return "Error - No iris";
 	}
 	
 	public String toggleIris()
 	{
-		if(irisType != null)
+		String IT = getIrisType();
+		if(IT != null)
 		{
 			if(irisState() == "Iris - Open")
 			{
@@ -232,7 +302,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		linkedX = nbt.getInteger("linkedX");
 		linkedY = nbt.getInteger("linkedY");
 		linkedZ = nbt.getInteger("linkedZ");
-		irisVarState = nbt.getInteger("irisState");
+		irisVarState = SGIrisState.valueOf(nbt.getInteger("irisState"));
+		irisSlide = nbt.getInteger("irisSlide");
 		if (nbt.hasKey("connectedLocation"))
 			connectedLocation = new SGLocation(nbt.getCompoundTag("connectedLocation"));
 		isInitiator = nbt.getBoolean("isInitiator");
@@ -249,7 +320,8 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		nbt.setBoolean("isMerged", isMerged);
 		nbt.setInteger("state", state.ordinal());
 		nbt.setDouble("targetRingAngle", targetRingAngle);
-		nbt.setInteger("irisState", irisVarState);
+		nbt.setInteger("irisState", irisVarState.ordinal());
+		nbt.setInteger("irisSlide", irisSlide);
 		nbt.setInteger("numEngagedChevrons", numEngagedChevrons);
 		//nbt.setString("homeAddress", homeAddress);
 		nbt.setString("dialledAddress", dialledAddress);
@@ -485,8 +557,37 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 			diallingFailure(player, "Stargate has insufficient fuel");
 			return "Error - Stargate has insufficient fuel";
 		}
+		modifiedFuelToOpen = fuelToOpen;
 		safeDial = safeDial || shouldSafeDial();
-		quickDial = quickDial || shouldQuickDial();
+		if(safeDial)
+		{
+			if(reloadFuel(fuelToOpen*SGExtensions.safeFuelMod))
+			{
+				modifiedFuelToOpen = modifiedFuelToOpen * SGExtensions.safeFuelMod;
+			}
+			else
+			{
+				safeDial = false;
+			}
+		}
+		quickDial = (quickDial || shouldQuickDial());
+		if(quickDial)
+		{
+			if(reloadFuel(fuelToOpen*SGExtensions.quickFuelMod))
+			{
+				modifiedFuelToOpen = modifiedFuelToOpen * SGExtensions.quickFuelMod;
+			}
+			else
+			{
+				quickDial = false;
+			}
+		}
+		
+		if (!reloadFuel(modifiedFuelToOpen))
+		{
+			diallingFailure(player, "Stargate has insufficient fuel");
+			return "Error - Stargate has insufficient fuel";
+		}
 		dte.safeDial = this.safeDial || dte.shouldSafeDial();
 		dte.quickDial = this.quickDial;
 		startDiallingStargate(address, dte, true);
@@ -578,6 +679,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		{
 			//performPendingTeleportations();
 			fuelUsage();
+			useFuel();
 			
 			if(irisState() == "Iris - Opening" || irisState() == "Iris - Closing")
 			{
@@ -591,7 +693,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 						irisSlide++;
 						if(irisSlide >= SGExtensions.irisFrames)
 						{
-							irisVarState = 0;
+							IrisStateFromNum(0);
 						}
 					}
 					else
@@ -599,10 +701,12 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 						irisSlide --;
 						if(irisSlide == 0)
 						{
-							irisVarState = 2;
+							IrisStateFromNum(2);
 						}
 					}
+					markBlockForUpdate();
 				}
+				
 			}
 			
 			if (timeout > 0)
@@ -672,14 +776,48 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		}
 		return fuelBuffer >= amount;
 	}
+	
+	public boolean useFuel()
+	{
+		//System.out.printf("SGBaseTE: Use fuel attempt\n");
+		int n = fuelSlots;
+		if((fuelBuffer + fuelPerItem) <= maxFuelBuffer)
+		{
+			for (int i = n - 1; i >= 0; i--)
+			{
+				//System.out.printf("SGBaseTE: Checking slot %d\n", i);
+				ItemStack stack = getStackInSlot(i);
+				if (stack != null && stack.getItem() == SGExtensions.stargateFuel.getItem() && stack.getItemDamage() == SGExtensions.stargateFuel.getItemDamage() && stack.stackSize > 0)
+				{
+					//System.out.printf("SGBaseTE: Valid item in %d\n", i);
+					fuelBuffer += fuelPerItem;
+					decrStackSize(i, 1);
+					markBlockForUpdate();
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public void useAllFuel()
+	{
+		int n = fuelSlots;
+		boolean isDone;
+		do
+		{
+			isDone = useFuel();
+		}
+		while(isDone == true);
+	}
 
 	boolean useFuelItem()
 	{
-		int n = getSizeInventory();
+		int n = fuelSlots;
 		for (int i = n - 1; i >= 0; i--)
 		{
 			ItemStack stack = getStackInSlot(i);
-			if (stack != null && stack.getItem() == SGExtensions.naquadah && stack.stackSize > 0)
+			if (stack != null && stack == SGExtensions.stargateFuel && stack.stackSize > 0)
 			{
 				decrStackSize(i, 1);
 				return true;
@@ -694,6 +832,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		{
 			fuelBuffer = amount;
 			onInventoryChanged();
+			markBlockForUpdate();
 			//System.out.printf("SGBaseTE: Fuel level now %d\n", fuelBuffer);
 		}
 	}
@@ -795,18 +934,40 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		{
 			return true;
 		}
+		else
+		{
+			ItemStack X = getStackInSlot(5);
+			if(X != null)
+			{
+				if (((SGDarkMultiItem)(X.getItem())).isUpgradeType("Stargate Upgrade - Safe Dial",X.getItemDamage()))
+				{
+					return true;
+				}
+			}
+		}
 		return false;
 	}
 	
 	boolean shouldQuickDial()
 	{
+		for(int i=0;i<upgradeSlots;i++)
+		{
+			ItemStack X = getStackInSlot(4+i);
+			if(X != null)
+			{
+				if (((SGDarkMultiItem)(X.getItem())).isUpgradeType("Stargate Upgrade - Fast Dial",X.getItemDamage()))
+				{
+					return true;
+				}
+			}
+		}
 		return false;
 	}
 
 	void finishDiallingAddress()
 	{
 		//System.out.printf("SGBaseTE: Connecting to '%s'\n", dialledAddress);
-		if (!isInitiator || useFuel(fuelToOpen))
+		if (!isInitiator || useFuel(modifiedFuelToOpen))
 		{
 			//sendClientEvent(SGEvent.Connect, 0);
 			if(safeDial == true)
@@ -879,7 +1040,7 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 				}
 			}
 		}
-		else if(isInitiator == false)
+		else if(state == SGState.Connected && isInitiator == false)
 		{
 			if(SGExtensions.irisKillClearInv)
 			{
@@ -1063,37 +1224,6 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 		}
 	}
 
-//	@Override
-//	public void receiveClientEvent(int id, int data) {
-//		if (worldObj.isRemote) {
-//			SGEvent type = SGEvent.valueOf(id);
-//			System.out.printf("SGBaseTE.receiveClientEvent: %s, %d in %s\n", type, data, worldObj);
-//			switch (type) {
-//				case StartDialling:
-//					targetRingAngle = data / 1000.0;
-//					enterState(SGState.Dialling, diallingTime);
-//					break;
-//				case FinishDialling:
-//					numEngagedChevrons = data;
-//					setRingAngle(targetRingAngle);
-//					enterState(SGState.Idle, 0);
-//					break;
-//				case Connect:
-//					initiateOpeningTransient();
-//					enterState(SGState.Connected, 0);
-//					break;
-//				case StartDisconnecting:
-//					numEngagedChevrons = 0;
-//					initiateClosingTransient();
-//					enterState(SGState.Disconnecting, 0);
-//					break;
-//				case FinishDisconnecting:
-//					numEngagedChevrons = 0;
-//					enterState(SGState.Idle, 0);
-//					break;
-//			}
-//		}
-//	}
 
 	void clientUpdate()
 	{
@@ -1243,25 +1373,11 @@ public class SGBaseTE extends BaseChunkLoadingTE implements IInventory
 
 }
 
-//------------------------------------------------------------------------------------------------
+////////////////////////////////////////////////
+///////////////////TELEPORTERS AND DAMAGE/////
+//////////////////////////////////////
 
-//enum SGEvent {
-//	Unknown, StartDialling, FinishDialling, Connect, StartDisconnecting, FinishDisconnecting;
-//	
-//	static SGEvent[] VALUES = values();
-//	
-//	public static SGEvent valueOf(int i) {
-//		try {
-//			return VALUES[i];
-//		}
-//		catch (IndexOutOfBoundsException e) {
-//			return Unknown;
-//		}
-//	}
-//
-//}
 
-//------------------------------------------------------------------------------------------------
 
 class DummyTeleporter extends Teleporter
 {

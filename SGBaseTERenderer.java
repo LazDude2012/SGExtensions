@@ -86,8 +86,8 @@ class SGBaseTERenderer extends TileEntitySpecialRenderer
 		renderRing(ringMidRadius, ringOuterRadius, RingType.Outer);
 		renderInnerRing(te, t);
 		renderChevrons(te);
-		SGBaseTE test = SGAddressing.findAddressedStargate(te.findHomeAddress());
-		String IState = test.irisState();
+		//SGBaseTE test = SGAddressing.findAddressedStargate(te.findHomeAddress());
+		String IState = te.irisState();
 		boolean irisClosed = (IState == "Iris - Closed" || IState == "Iris - Opening" || IState == "Iris - Closing");
 		if(irisClosed == true)
 		{
@@ -278,12 +278,14 @@ class SGBaseTERenderer extends TileEntitySpecialRenderer
 	 	
 	void renderIris(SGBaseTE te)
 	{
-		SGBaseTE test = SGAddressing.findAddressedStargate(te.findHomeAddress());
 		double distance = 0.1;
-		bindTextureByName("/sgextensions/resources/iris.png");
+		if(te.getIrisType() == "Iris")
+		{
+			bindTextureByName("/sgextensions/resources/iris.png");
+		}
 		GL11.glDisable(GL11.GL_CULL_FACE);
 		GL11.glNormal3d(0, 0, 1);
-		int slide = test.irisSlide;
+		int slide = te.irisSlide;
 		for (int i = 0; i < ehGridRadialSize; i++)
 		{
 			GL11.glBegin(GL11.GL_QUAD_STRIP);
@@ -298,8 +300,8 @@ class SGBaseTERenderer extends TileEntitySpecialRenderer
 
 	void renderEventHorizon(SGBaseTE te)
 	{
-		SGBaseTE test = SGAddressing.findAddressedStargate(te.findHomeAddress());
-		String IState = test.irisState();
+		String IState = te.irisState();
+		//System.out.println("TEST:" + IState);
 		boolean irisClosed = (IState == "Iris - Closed" || IState == "Iris - Opening" || IState == "Iris - Closing");
 		bindTextureByName("/misc/water.png");
 		GL11.glDisable(GL11.GL_CULL_FACE);

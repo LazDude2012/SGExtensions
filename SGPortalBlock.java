@@ -12,6 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
+import net.minecraftforge.event.world.WorldEvent;
 
 import java.util.Random;
 
@@ -21,6 +22,7 @@ public class SGPortalBlock extends Block
 	public SGPortalBlock(int id)
 	{
 		super(id, Material.rock);
+		this.setBlockUnbreakable();
 		setBlockBounds(0, 0, 0, 0, 0, 0);
 	}
 
@@ -43,15 +45,40 @@ public class SGPortalBlock extends Block
 	}
 
 	@Override
-	public AxisAlignedBB getCollisionBoundingBoxFromPool(World par1World, int par2, int par3, int par4)
+	public AxisAlignedBB getCollisionBoundingBoxFromPool(World A, int X, int Y, int Z)
 	{
+		/*
+		//System.out.println("TEST: "+ X + "," + Y + "," + Z);
+		SGBaseTE te = getStargateTE(A,X,Y,Z);
+		if(te != null)
+		{
+			String IS = te.irisState();
+			//System.out.println(IS);
+			if(IS != "Error - No Iris" && IS != "Error - Unknown state" && IS != "Iris - Open")
+			{
+				return AxisAlignedBB.getAABBPool().addOrModifyAABBInPool((double)X + 0, (double)Y + 0, (double)Z + 0, (double)X + 1, (double)Y + 1, (double)Z + 1);
+			}
+		}
+		return AxisAlignedBB.getAABBPool().addOrModifyAABBInPool(0, 0, 0, 0, 0, 0);*/
 		return null;
 	}
-
+	
 	@Override
 	public int quantityDropped(Random par1Random)
 	{
 		return 0;
+	}
+	
+	@Override
+	public void updateTick(World A,int X,int Y, int Z, Random Huh)
+	{
+		
+	}
+	
+	@Override
+	public int tickRate()
+	{
+		return 3;
 	}
 
 	@Override

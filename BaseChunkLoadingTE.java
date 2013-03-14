@@ -62,8 +62,8 @@ public abstract class BaseChunkLoadingTE extends BaseTileEntity
 			for (int j = minZ; j <= maxZ; j++)
 			{
 				int x = chunkX + i, z = chunkZ + j;
-				System.out.printf("BaseChunkLoadingTE.forceChunkRangeOnTicket: forcing chunk (%d; %d, %d)\n",
-						worldObj.provider.dimensionId, x, z);
+				//System.out.printf("BaseChunkLoadingTE.forceChunkRangeOnTicket: forcing chunk (%d; %d, %d)\n",
+				//		worldObj.provider.dimensionId, x, z);
 				ForgeChunkManager.forceChunk(ticket, new ChunkCoordIntPair(x, z));
 			}
 	}

@@ -160,15 +160,21 @@ public class SGScreen extends GuiContainer
 		setColor(1.0, 1.0, 1.0);
 	}
 
-	public void drawString(FontRenderer fr, String s, int x, int y, int color, boolean shadow)
+	public int drawString(FontRenderer fr, String s, int x, int y, int color, boolean shadow)
 	{
-		fr.drawString(s, x, y, color, shadow);
+		return fr.drawString(s, x, y, color, shadow);
 	}
 
-	public void drawCenteredString(FontRenderer fr, String s, int x, int y, int color, boolean shadow)
+	public int drawCenteredString(FontRenderer fr, String s, int x, int y, int color, boolean shadow)
 	{
-		fr.drawString(s, x - fr.getStringWidth(s) / 2, y, color, shadow);
+		return fr.drawString(s, x - fr.getStringWidth(s) / 2, y, color, shadow);
 	}
+	
+	public int drawRightString(FontRenderer fr, String s, int x, int y, int color, boolean shadow)
+	{
+		return fr.drawString(s, x - fr.getStringWidth(s), y, color, shadow);
+	}
+	
 
 }
 
