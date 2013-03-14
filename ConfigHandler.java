@@ -25,6 +25,10 @@ public class ConfigHandler
 	public static int itemNaqIngotID;
 	public static int itemCrystalCoreID;
 	public static int itemCrystalControlID;
+	public static int itemUpgradesID;
+	public static int itemHardID;
+	public static boolean fuelHardMode;
+	public static boolean gateHardMode;
 
 	public static void loadConfig(FMLPreInitializationEvent e)
 	{
@@ -49,7 +53,7 @@ public class ConfigHandler
 		Property icPowerFuel = config.get("Power Configuration","IC2 Power per Fuel Value",300);
 		icPower = icPowerFuel.getInt();
 		
-		Property fuelAmount = config.get("Power Configuration","Fuel Values per Naquadah",20*60*20);
+		Property fuelAmount = config.get("Power Configuration","Fuel Values per Naquadah",3*60*20);
 		fuelAm = fuelAmount.getInt();
 		
 		Property maxOpenT = config.get("Gate Configuration","Maximum open time (Minutes)",38);
@@ -57,6 +61,12 @@ public class ConfigHandler
 		
 		Property irisClear = config.get("Gate Configuration","Iris kill clears inventory",true);
 		irisKillClear = irisClear.getBoolean(true);
+		
+		Property gHard = config.get("Gate Configuration","Can go through recieving gates",false);
+		gateHardMode = !gHard.getBoolean(false);
+		
+		Property fHard = config.get("Gate Configuration","Fuel is in hard mode",true);
+		fuelHardMode = fHard.getBoolean(true);
 		
 		Property ring= config.getBlock("SGRingID",3747,"The BlockID for the SG Ring and Chevron Blocks.");
 		blockSGRingID = ring.getInt();
@@ -87,6 +97,12 @@ public class ConfigHandler
 
 		Property crystalControl = config.getItem("SGCrystalControlID",5504,"The ItemID for the Stargate Controller Crystal.");
 		itemCrystalControlID = crystalControl.getInt();
+		
+		Property upgradesID = config.getItem("SGUpdatedsID",5505,"The ItemID for the Stargate Upgrades.");
+		itemUpgradesID = upgradesID.getInt();
+		
+		Property hardID = config.getItem("SGHardID",5506,"The ItemID for Naquadriah.");
+		itemHardID = hardID.getInt();
 		
 		
 
