@@ -116,7 +116,7 @@ public class SGDarkPowerTE extends TileEntity implements IPowerReceptor, IEnergy
 							energyMul = Math.min(energyMul, toMaxFuel);
 							int energyToUse = (int) Math.floor(BCFuel * energyMul);
 							powerVProvider.useEnergy(energyToUse, energyToUse, true);
-							connectedGate.fuelBuffer += energyMul;
+							connectedGate.setFuelBuffer(connectedGate.fuelBuffer + energyMul);
 						}
 					}
 				}
@@ -175,7 +175,7 @@ public class SGDarkPowerTE extends TileEntity implements IPowerReceptor, IEnergy
 		int in = (int) Math.floor((amount+ic2Buffer)/ICFuel);
 		in = Math.min(in,toMaxFuel);
 		int excess = (ic2Buffer + amount) - (in*ICFuel);
-		connectedGate.fuelBuffer += in;
+		connectedGate.setFuelBuffer(connectedGate.fuelBuffer + in);
 		ic2Buffer = excess;
 		return 0;
 	}
